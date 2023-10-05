@@ -8,7 +8,7 @@ Group members:
 - Theodoros Loukis s223526
 - Ioannis Louvis s222556
 - Ioannis Karampinis s222559
-- Elena Muniz s2134579
+- Elena Muniz s213579
 
 
 ### Overall goal
