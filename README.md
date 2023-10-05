@@ -4,7 +4,7 @@ Fruit image classification using Vision Transformer
 
 This repository contains the project work of our group for the DTU special course [Machine Learning Operations](https://kurser.dtu.dk/course/02476) for the Autumn semester 2023.
 
-Team 31 members:
+Group members:
 - Theodoros Loukis s223526
 - Ioannis Louvis s222556
 - Ioannis Karampinis s222559
