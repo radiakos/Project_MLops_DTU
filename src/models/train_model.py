@@ -24,16 +24,22 @@ from transformers import AutoModelForImageClassification
 def compute_metrics(p):
     return metric.compute(predictions=np.argmax(p.predictions, axis=1), references=p.label_ids)
 
-if __name__ == "__main__":
-    # 1. Load hyperparameters
-    # 2. device = "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
-    # 3. Initialize wandb
-    # 4. Load datasets
+@hydra.main(config_path="conf", config_name="config.yaml")
+def train(config):
+    # Directories configuration
+    dirs = config.experiment.dirs
+    filepath = dirs.processed_path
 
+    # Hyperparameters configuration
+    hparams = config.experiment.hyperparameters
+    pretrained_model = hparams.pretrained_model
+    lr = hparams.lr
+    epochs = hparams.epochs
+    seed = hparams.seed
+    
+    torch.manual_seed(seed)
     # Create the FruitsDataset(s) and their DataLoaders
-    model_name_or_path = 'google/vit-base-patch16-224-in21k'
-    filepath = "../data/processed"
-    processor = ViTImageProcessor.from_pretrained(model_name_or_path)
+    processor = ViTImageProcessor.from_pretrained(pretrained_model)
     
     data_cleaning = CleanData()
     data_cleaning.execute()
@@ -53,8 +59,7 @@ if __name__ == "__main__":
         label2id={c: str(i) for i, c in enumerate(labels)}
     )
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
-    epochs = 5
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     num_training_steps = epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -64,7 +69,7 @@ if __name__ == "__main__":
         num_training_steps=num_training_steps,
     )
 
-    device = 'cpu'
+    device = "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
     model.to(device)
 
     for epoch in tqdm(range(epochs), desc="Training"):
@@ -131,3 +136,10 @@ if __name__ == "__main__":
             accuracy /= len(valid_dataloader)
 
             print(f"Validation Loss: {running_loss}, Validation Accuracy: {accuracy}")
+
+if __name__ == "__main__":
+    # 1. Load hyperparameters
+    # 2. device = "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
+    # 3. Initialize wandb
+    # 4. Load datasets
+    train()
