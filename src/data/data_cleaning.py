@@ -25,7 +25,7 @@ class CleanData():
                 os.rename(old_dir_path, new_dir_path)
 
     def create_df(self):
-        #self.rename_folder(target_folder=extracted_dir, old_folder_name= 'Processed Images_Fruits', new_folder_name='fruit_images')
+        self.rename_folder(target_folder=extracted_dir, old_folder_name= 'Processed Images_Fruits', new_folder_name='fruit_images')
 
         fruit_images_dir = os.path.join(extracted_dir, "fruit_images")
         self.rename_folder(target_folder=fruit_images_dir, old_folder_name='Good Quality_Fruits', new_folder_name='good_quality_fruits')
