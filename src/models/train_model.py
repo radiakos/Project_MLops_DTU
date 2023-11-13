@@ -36,8 +36,10 @@ def train(config):
     lr = hparams.lr
     epochs = hparams.epochs
     seed = hparams.seed
+    gpu = hparams.gpu
     
     torch.manual_seed(seed)
+
     # Create the FruitsDataset(s) and their DataLoaders
     processor = ViTImageProcessor.from_pretrained(pretrained_model)
     
@@ -48,8 +50,11 @@ def train(config):
     val_dataset = FruitsDataset(filepath=filepath, feature_extractor=processor, data_type="valid")
     labels = train_dataset.get_labels()
 
-    train_dataloader = DataLoader(train_dataset)
-    valid_dataloader = DataLoader(val_dataset)
+    train_loader_options = {"shuffle": True} # ADD OTHER HYPERPARAMETERS
+    train_dataloader = DataLoader(train_dataset, **train_loader_options)
+
+    valid_loader_options = {"shuffle": False} # ADD OTHER HYPERPARAMETERS
+    valid_dataloader = DataLoader(val_dataset, **valid_loader_options)
 
     metric = load_metric("accuracy")
     model = AutoModelForImageClassification.from_pretrained(

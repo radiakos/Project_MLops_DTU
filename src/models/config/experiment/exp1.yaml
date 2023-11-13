@@ -11,3 +11,4 @@ hyperparameters:
   lr: 0.001
   epochs: 3
   seed: 42
+  gpu: False
