@@ -7,15 +7,15 @@ import numpy as np
 import zipfile
 import random
 
-zip_file_path = "../data/external/archive.zip"
-extracted_dir = "../data/external/"
+zip_file_path = "data/external/archive.zip"
+extracted_dir = "data/external/"
 
 class CleanData():
     def __init__(
         self,
     ) -> None:
         super(CleanData, self).__init__()
-        self.data_dir = "../data/external/fruit_images"
+        self.data_dir = "data/external/fruit_images"
 
     def rename_folder(self, target_folder, old_folder_name, new_folder_name):
         for folder_name in os.listdir(target_folder):
@@ -25,6 +25,8 @@ class CleanData():
                 os.rename(old_dir_path, new_dir_path)
 
     def create_df(self):
+        current_directory = os.getcwd()
+        print("Current Directory:", current_directory)
         self.rename_folder(target_folder=extracted_dir, old_folder_name= 'Processed Images_Fruits', new_folder_name='fruit_images')
 
         fruit_images_dir = os.path.join(extracted_dir, "fruit_images")
@@ -190,7 +192,7 @@ class CleanData():
 
 
     def save_dfs(self, train_df, valid_df, test_df):
-        processed_data_path = "../data/processed"
+        processed_data_path = "data/processed"
         valid_df.to_csv(os.path.join(processed_data_path, "validation_data.csv"), index=False) 
         test_df.to_csv(os.path.join(processed_data_path, "test_data.csv"), index=False) 
         train_df.to_csv(os.path.join(processed_data_path, "train_data.csv"), index=False) 

@@ -15,8 +15,8 @@ from transformers import ViTImageProcessor
 import torchvision.transforms as transforms
 import sys
 
-from data.make_dataset import FruitsDataset
-from data.data_cleaning import CleanData
+from src.data.make_dataset import FruitsDataset
+from src.data.data_cleaning import CleanData
 
 from datasets import load_metric
 from transformers import AutoModelForImageClassification
@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # Create the FruitsDataset(s) and their DataLoaders
     model_name_or_path = 'google/vit-base-patch16-224-in21k'
-    filepath = "../data/processed"
+    filepath = "data/processed"
     processor = ViTImageProcessor.from_pretrained(model_name_or_path)
     
     data_cleaning = CleanData()
