@@ -76,7 +76,7 @@ class FruitsDataset(Dataset):
         label = self.dataframe.iloc[idx, 1]  # Assuming the "label" column is at index 1 
         
         pixel_values = self.feature_extractor(image, return_tensors="pt").pixel_values
-        print(f"image_path : {self.dataframe.iloc[idx, 2]}, shape: {pixel_values.shape}")
+        #print(f"image_path : {self.dataframe.iloc[idx, 2]}, shape: {pixel_values.shape}")
         return {"pixel_values": pixel_values, "labels": torch.tensor(label)}      
     
     def get_labels(self):
