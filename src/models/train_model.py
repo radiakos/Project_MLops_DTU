@@ -21,14 +21,16 @@ from data.data_cleaning import CleanData
 from datasets import load_metric
 from transformers import AutoModelForImageClassification
 
-def compute_metrics(p):
-    return metric.compute(predictions=np.argmax(p.predictions, axis=1), references=p.label_ids)
+# def compute_metrics(p):
+#     return metric.compute(predictions=np.argmax(p.predictions, axis=1), references=p.label_ids)
 
 @hydra.main(config_path="conf", config_name="config.yaml")
 def train(config):
     # Directories configuration
     dirs = config.experiment.dirs
     filepath = dirs.processed_path
+    # saved_models_path = dirs.saved_models_path
+    # saved_weights_path = dirs.saved_weights_path
 
     # Hyperparameters configuration
     hparams = config.experiment.hyperparameters
@@ -64,7 +66,7 @@ def train(config):
         label2id={c: str(i) for i, c in enumerate(labels)}
     )
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr) # MAKE AS HYPERPARAMETER?
 
     num_training_steps = epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -86,33 +88,25 @@ def train(config):
         for batch in tqdm(train_dataloader, desc="Batch", leave=False):
 
             batch["pixel_values"] = torch.squeeze(batch["pixel_values"], 1)
-
             optimizer.zero_grad()
-
             batch = {k: v.to(device) for k, v in batch.items()}
-
             y_pred = model(**batch)
-
             class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
-
             is_correct = (
                 class_pred.detach().cpu().numpy() == np.array(batch["labels"].cpu())
             ).sum()
 
             accuracy += is_correct
-
             loss = y_pred.loss
-
             loss.backward()
-
             optimizer.step()
-
             running_loss += loss.item()
-
             lr_scheduler.step()
 
         running_loss /= len(train_dataloader)
+        # wandb.log({"training loss": running_loss})
         accuracy /= len(train_dataloader)
+        # wandb.log({"training accuracy": accuracy})
 
         print(f"Training Loss: {running_loss}, Training Accuracy: {accuracy}")
 
@@ -125,20 +119,20 @@ def train(config):
                 batch = {k: v.to(device) for k, v in batch.items()}
 
                 y_pred = model(**batch)
-
                 class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
-
                 is_correct = (
                     class_pred.detach().cpu().numpy() == np.array(batch["labels"].cpu())
                 ).sum()
 
                 accuracy += is_correct
-
                 loss = y_pred.loss
+                # loss.backward() # WHY NOT?
                 running_loss += loss.item()
 
             running_loss /= len(valid_dataloader)
+            # wandb.log({"training loss": running_loss})
             accuracy /= len(valid_dataloader)
+            # wandb.log({"training accuracy": accuracy})
 
             print(f"Validation Loss: {running_loss}, Validation Accuracy: {accuracy}")
 
