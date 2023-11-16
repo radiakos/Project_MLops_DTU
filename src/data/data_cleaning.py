@@ -66,20 +66,20 @@ class CleanData():
                 for i, img in enumerate(image_list):
                     image_path = os.path.join(fruit_path, img)
                     if i < sample_count:
-                        img = plt.imread(image_path)               
+                        img = plt.imread(image_path)
                         samples +=1
                     file_paths.append(image_path)
                     if fruit_quality == mixed_quality_path:
                         labels.append(fruit + '_Mixed')
                     else:
                         labels.append(fruit)
-            
+
         fruit_series = pd.Series(file_paths, name='image')
         label_series = pd.Series(labels, name='label')
         df = pd.concat([fruit_series, label_series], axis=1)
         return df
-    
-    def df_information(self, df_: pd.DataFrame):    
+
+    def df_information(self, df_: pd.DataFrame):
         class_count = len(list(df_["label"].unique()))
         print(f"The dataset contains {df_.shape[0]} images.")
         print(f"The dataset contains the following {class_count} distinct classes. \n")
@@ -90,10 +90,10 @@ class CleanData():
         items_per_class = list(df_["label"].value_counts())
         print(f"\nEach of the above classses contains {items_per_class} images.")
 
-    def split_df_to_train_and_test(self, df_:pd.DataFrame, test_valid_size, train_size) :
+    def split_df_to_train_and_test(self, df_:pd.DataFrame, test_valid_size, test_valid_split) :
         # Split the DataFrame into train (70%), validation (15%), and test (15%)
         train_df, test_and_valid_df = train_test_split(df_, test_size=test_valid_size, random_state=42)
-        valid_df, test_df = train_test_split(test_and_valid_df, test_size=train_size, random_state=42)
+        valid_df, test_df = train_test_split(test_and_valid_df, test_size=test_valid_split, random_state=42)
 
         # Check the lengths of the resulting DataFrames
         print("Train set length:", len(train_df))
@@ -101,7 +101,7 @@ class CleanData():
         print("Test set length:", len(test_df))
 
         return train_df, valid_df, test_df
-    
+
     def df_trim(self, df_: pd.DataFrame, desired_samples_per_class: int) -> pd.DataFrame:
         # Create an empty DataFrame to store the trimmed data
         trimmed_train_df = pd.DataFrame(columns=df_.columns)
@@ -115,7 +115,7 @@ class CleanData():
         trimmed_train_df.reset_index(drop=True, inplace=True)
 
         return trimmed_train_df
-    
+
     def classes_with_less_than_n_samples(self, df_: pd.DataFrame, desired_samples_per_class: int):
         class_counts = df_['label'].value_counts()
         classes_with_less_than_n_samples_list =  class_counts[class_counts < desired_samples_per_class].index.tolist()
@@ -140,9 +140,9 @@ class CleanData():
                 filename = f"AUG_IMG_{np.random.randint(1000)}_{angle}.jpg"
                 file_path = os.path.join(save_folder, filename)
                 augmented_image.save(file_path)
-            
+
             return file_path
-    
+
     def df_balance(self, df_: pd.DataFrame, desired_samples_per_class : int) -> pd.DataFrame:
         save_folder = self.train_dir
         # Iterate through the classes with fewer than 200 samples
@@ -153,7 +153,7 @@ class CleanData():
 
                 images_to_augment = len(class_samples)
                 while images_to_augment < desired_samples_per_class:
-                    
+
                     # Choose an image from the class
                     random_index = random.randint(0, len(class_df) - 1)
                     # Get the image file path at the random index
@@ -169,7 +169,7 @@ class CleanData():
                     images_to_augment+=1
                 print(f"For class [{class_name}] I have augmented [{desired_samples_per_class-len(class_samples)}] images.")
         return df_
-    
+
     def resize_image(self, image_path, output_path, new_width : int, new_height: int):
         with Image.open(image_path) as image:
             resized_image = image.resize((new_width, new_height))
@@ -185,10 +185,10 @@ class CleanData():
             new_image_path = os.path.join(save_label_folder, image_name)
             if os.path.exists(image_path):
                 self.resize_image(image_path=image_path, output_path=new_image_path, new_width=width, new_height=height)
+                print(f"Counter [{index}] Resized image {new_image_path}")
             else:
                 print(f"File not found: {image_path}")
 
-        #print(df_["image"])
         return df_
 
 @hydra.main(config_path="../conf", config_name="data_config.yaml")
@@ -205,7 +205,7 @@ def main(cfg):
     data_cleaning.create_train_valid_folders(labels)
 
     data_cleaning.df_information(df_=data)
-    train_df, valid_df, test_df = data_cleaning.split_df_to_train_and_test(df_=data, test_valid_size=params.test_valid_size, train_size=params.train_size)
+    train_df, valid_df, test_df = data_cleaning.split_df_to_train_and_test(df_=data, test_valid_size=params.test_valid_size, test_valid_split=params.test_valid_split)
 
     trimmed_train_df = data_cleaning.df_trim(df_= train_df, desired_samples_per_class=params.trim_num)
     data_cleaning.df_information(df_= trimmed_train_df)
@@ -215,9 +215,8 @@ def main(cfg):
 
     df_balanced_resized = data_cleaning.resize_images_in_df(df_=df_balanced, save_folder=data_cleaning.train_dir, width=params.image_width, height=params.image_height)
     #data_cleaning.showcase_df(df_=df_balanced_resized)
-    df_valid_resized = data_cleaning.resize_images_in_df(df_=valid_df, save_folder=data_cleaning.valid_dir)
+    df_valid_resized = data_cleaning.resize_images_in_df(df_=valid_df, save_folder=data_cleaning.valid_dir, width=params.image_width, height=params.image_height)
 
 
 if __name__ == "__main__":
     main()
-

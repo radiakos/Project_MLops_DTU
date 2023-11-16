@@ -90,4 +90,6 @@ target/
 .mypy_cache/
 
 
-/external
+/data/external
+/data/processed
+/outputs

@@ -1,0 +1,17 @@
+# models_config.yaml
+
+model:
+  model_path: "google/vit-base-patch16-224-in21k"
+  train_batch_size: 8
+  valid_batch_size: 24
+  num_workers: 8
+  shuffle_flag: False
+  lr: 0.001
+  epochs: 4
+  warmup_steps: 0
+  gpu_flag: True
+
+
+dirs:
+  train_dir: ${hydra:runtime.cwd}/data/processed/train
+  valid_dir: ${hydra:runtime.cwd}/data/processed/valid

@@ -1,14 +1,14 @@
-#config.yaml
+# data_config.yaml
 
 data_cleaning:
-  test_valid_size : 0.2
-  train_size : 0.5
-  trim_num : 200
-  image_width: 128
-  image_height: 128
+  test_valid_size : 0.15
+  test_valid_split : 0.5
+  trim_num : 300
+  image_width: 256
+  image_height: 256
 
 dirs:
-  train_dir: ${hydra:runtime.cwd}/data/external/fruit_images/train
-  valid_dir: ${hydra:runtime.cwd}/data/external/fruit_images/valid
+  train_dir: ${hydra:runtime.cwd}/data/processed/train
+  valid_dir: ${hydra:runtime.cwd}/data/processed/valid
   data_dir: ${hydra:runtime.cwd}/data/external/fruit_images
   external_dir: ${hydra:runtime.cwd}/data/external
