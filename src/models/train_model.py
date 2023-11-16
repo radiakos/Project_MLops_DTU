@@ -26,21 +26,28 @@ def compute_metrics(p):
 
 if __name__ == "__main__":
     # 1. Load hyperparameters
-    # 2. device = "cuda" if (gpu and torch.cuda.is_available()) else "cpu"
-    # 3. Initialize wandb
-    # 4. Load datasets
+    # 2. Initialize wandb
 
     # Create the FruitsDataset(s) and their DataLoaders
     model_name_or_path = 'google/vit-base-patch16-224-in21k'
-    filepath = "data/processed"
+    train_dir = "data/external/fruit_images/train"
+    valid_dir = "data/external/fruit_images/valid"
     processor = ViTImageProcessor.from_pretrained(model_name_or_path)
     
-    data_cleaning = CleanData()
-    data_cleaning.execute()
+    train_dataset = FruitsDataset(input_filepath=train_dir, feature_extractor=processor, data_type="train")
+    val_dataset = FruitsDataset(input_filepath=valid_dir, feature_extractor=processor, data_type="valid")
 
-    train_dataset = FruitsDataset(filepath=filepath, feature_extractor=processor, data_type="train")
-    val_dataset = FruitsDataset(filepath=filepath, feature_extractor=processor, data_type="valid")
-    labels = train_dataset.get_labels()
+    train_loader_options = {
+        "shuffle": True,
+        "batch_size": 12, 
+        "num_workers": 4
+    }
+
+    valid_loader_options = {
+        "shuffle": False,
+        "batch_size": 12,
+        "num_workers": 4,
+    }
 
     train_dataloader = DataLoader(train_dataset)
     valid_dataloader = DataLoader(val_dataset)
@@ -48,13 +55,11 @@ if __name__ == "__main__":
     metric = load_metric("accuracy")
     model = AutoModelForImageClassification.from_pretrained(
         model_name_or_path,
-        num_labels=len(labels),
-        id2label={str(i): c for i, c in enumerate(labels)},
-        label2id={c: str(i) for i, c in enumerate(labels)}
+        num_labels=train_dataset.num_classes,
     )
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
-    epochs = 5
+    epochs = 3
 
     num_training_steps = epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -64,7 +69,11 @@ if __name__ == "__main__":
         num_training_steps=num_training_steps,
     )
 
-    device = 'cpu'
+    device = torch.device(
+            "cuda" if ( torch.cuda.is_available()) else "cpu"
+        )
+    print(f"Using device: {device}")
+
     model.to(device)
 
     for epoch in tqdm(range(epochs), desc="Training"):
@@ -74,7 +83,7 @@ if __name__ == "__main__":
         model.train()
 
         for batch in tqdm(train_dataloader, desc="Batch", leave=False):
-
+            
             batch["pixel_values"] = torch.squeeze(batch["pixel_values"], 1)
 
             optimizer.zero_grad()

@@ -6,16 +6,21 @@ from PIL import Image, ImageOps
 import numpy as np
 import zipfile
 import random
-
-zip_file_path = "data/external/archive.zip"
-extracted_dir = "data/external/"
+import hydra
 
 class CleanData():
     def __init__(
         self,
+        data_dir,
+        train_dir,
+        valid_dir,
+        external_dir
     ) -> None:
         super(CleanData, self).__init__()
-        self.data_dir = "data/external/fruit_images"
+        self.data_dir = data_dir
+        self.train_dir = train_dir
+        self.valid_dir = valid_dir
+        self.external_dir = external_dir
 
     def rename_folder(self, target_folder, old_folder_name, new_folder_name):
         for folder_name in os.listdir(target_folder):
@@ -24,12 +29,22 @@ class CleanData():
                 new_dir_path = os.path.join(target_folder, new_folder_name)
                 os.rename(old_dir_path, new_dir_path)
 
+    def create_train_valid_folders(self, labels):
+        os.makedirs(self.train_dir, exist_ok=True)
+        os.makedirs(self.valid_dir, exist_ok=True)
+
+        for label in (labels):
+            new_train_path = os.path.join(self.train_dir, label)
+            os.makedirs(new_train_path, exist_ok=True)
+            new_valid_path = os.path.join(self.valid_dir, label)
+            os.makedirs(new_valid_path, exist_ok=True)
+
     def create_df(self):
         current_directory = os.getcwd()
         print("Current Directory:", current_directory)
-        self.rename_folder(target_folder=extracted_dir, old_folder_name= 'Processed Images_Fruits', new_folder_name='fruit_images')
+        self.rename_folder(target_folder=self.external_dir, old_folder_name= 'Processed Images_Fruits', new_folder_name='fruit_images')
 
-        fruit_images_dir = os.path.join(extracted_dir, "fruit_images")
+        fruit_images_dir = os.path.join(self.external_dir, "fruit_images")
         self.rename_folder(target_folder=fruit_images_dir, old_folder_name='Good Quality_Fruits', new_folder_name='good_quality_fruits')
         self.rename_folder(target_folder=fruit_images_dir, old_folder_name='Bad Quality_Fruits', new_folder_name='bad_quality_fruits')
         self.rename_folder(target_folder=fruit_images_dir, old_folder_name='Mixed Qualit_Fruits', new_folder_name='mixed_quality_fruits')
@@ -75,10 +90,10 @@ class CleanData():
         items_per_class = list(df_["label"].value_counts())
         print(f"\nEach of the above classses contains {items_per_class} images.")
 
-    def split_df_to_train_and_test(self, df_:pd.DataFrame) :
+    def split_df_to_train_and_test(self, df_:pd.DataFrame, test_valid_size, train_size) :
         # Split the DataFrame into train (70%), validation (15%), and test (15%)
-        train_df, test_and_valid_df = train_test_split(df_, test_size=0.2, random_state=42)
-        valid_df, test_df = train_test_split(test_and_valid_df, test_size=0.5, random_state=42)
+        train_df, test_and_valid_df = train_test_split(df_, test_size=test_valid_size, random_state=42)
+        valid_df, test_df = train_test_split(test_and_valid_df, test_size=train_size, random_state=42)
 
         # Check the lengths of the resulting DataFrames
         print("Train set length:", len(train_df))
@@ -110,26 +125,26 @@ class CleanData():
 
     def augment_image(self, image_path, save_folder):
         os.makedirs(save_folder, exist_ok=True)
-        image = Image.open(image_path)
-        # Apply random rotation (you can customize the rotation angle)
-        angle = np.random.randint(-15, 15)
-        augmented_image = image.rotate(angle)
+        with Image.open(image_path) as image:
+            # Apply random rotation (you can customize the rotation angle)
+            angle = np.random.randint(-15, 15)
+            augmented_image = image.rotate(angle)
 
-        # Apply horizontal flip with a 50% chance
-        if np.random.choice([True, False]):
-            augmented_image = ImageOps.mirror(augmented_image)
+            # Apply horizontal flip with a 50% chance
+            if np.random.choice([True, False]):
+                augmented_image = ImageOps.mirror(augmented_image)
 
-        if save_folder:
-            # Ensure the save folder exists
-            os.makedirs(save_folder, exist_ok=True)
-            filename = f"AUG_IMG_{np.random.randint(1000)}_{angle}.jpg"
-            file_path = os.path.join(save_folder, filename)
-            augmented_image.save(file_path)
-        
-        return file_path
+            if save_folder:
+                # Ensure the save folder exists
+                os.makedirs(save_folder, exist_ok=True)
+                filename = f"AUG_IMG_{np.random.randint(1000)}_{angle}.jpg"
+                file_path = os.path.join(save_folder, filename)
+                augmented_image.save(file_path)
+            
+            return file_path
     
     def df_balance(self, df_: pd.DataFrame, desired_samples_per_class : int) -> pd.DataFrame:
-        save_folder = os.path.join(self.data_dir, "augmented")
+        save_folder = self.train_dir
         # Iterate through the classes with fewer than 200 samples
         target_class = self.classes_with_less_than_n_samples(df_=df_, desired_samples_per_class=200)
         for class_name in target_class:
@@ -145,6 +160,7 @@ class CleanData():
                     random_image = class_df.iloc[random_index]["image"]
 
                     # Apply data augmentation to generate a new image
+                    save_folder = os.path.join(self.train_dir, class_name)
                     augmented_image = self.augment_image(image_path=random_image, save_folder=save_folder)
 
                     # Append the augmented image to your dataset
@@ -155,63 +171,53 @@ class CleanData():
         return df_
     
     def resize_image(self, image_path, output_path, new_width : int, new_height: int):
-        image = Image.open(image_path)
-        resized_image = image.resize((new_width, new_height))
-        resized_image.save(output_path)
+        with Image.open(image_path) as image:
+            resized_image = image.resize((new_width, new_height))
+            resized_image.save(output_path)
 
-    def resize_images_in_df(self, df_:pd.DataFrame):
-        new_width = 224
-        new_height = 224
+    def resize_images_in_df(self, df_:pd.DataFrame, save_folder, width, height):
 
         for index, row in df_.iterrows():
             image_path = row["image"]
-            print(image_path, index)
+            label = row["label"]
+            image_name = os.path.basename(image_path)
+            save_label_folder = os.path.join(save_folder, label)
+            new_image_path = os.path.join(save_label_folder, image_name)
             if os.path.exists(image_path):
-                self.resize_image(image_path=image_path, output_path=image_path, new_width=new_width, new_height=new_height)
+                self.resize_image(image_path=image_path, output_path=new_image_path, new_width=width, new_height=height)
             else:
                 print(f"File not found: {image_path}")
 
-        print(df_["image"])
+        #print(df_["image"])
         return df_
 
-    def showcase_df(self, df_:pd.DataFrame):
-        # Create a figure to display the images
-        distinct_labels = df_["label"].unique()
-        plt.figure(figsize=(10, 10))
-        for label in distinct_labels:
-            # Get all images for the current label
-            label_df = df_[df_["label"] == label]
-            random_index = random.randint(0, len(label_df) - 1)
-            sample_image = Image.open(label_df.iloc[random_index]["image"])
-            # Load and display the image
-            plt.subplot(5, 5, distinct_labels.tolist().index(label) + 1)
-            plt.imshow(sample_image)
-            plt.title(label, color='blue', fontsize=10)
-            plt.axis("off")
-        plt.show()
+@hydra.main(config_path="../conf", config_name="data_config.yaml")
+def main(cfg):
+    # Load the directories and the parameters from hydra #
+    dirs = cfg.dirs
+    params = cfg.data_cleaning
+    data_cleaning = CleanData(dirs.data_dir, dirs.train_dir, dirs.valid_dir, dirs.external_dir)
+    data = data_cleaning.create_df()
+
+    distinct_labels_df = data.drop_duplicates(subset="label")
+    print(distinct_labels_df.head(18))
+    labels = distinct_labels_df['label'].values
+    data_cleaning.create_train_valid_folders(labels)
+
+    data_cleaning.df_information(df_=data)
+    train_df, valid_df, test_df = data_cleaning.split_df_to_train_and_test(df_=data, test_valid_size=params.test_valid_size, train_size=params.train_size)
+
+    trimmed_train_df = data_cleaning.df_trim(df_= train_df, desired_samples_per_class=params.trim_num)
+    data_cleaning.df_information(df_= trimmed_train_df)
+
+    df_balanced = data_cleaning.df_balance(df_=trimmed_train_df, desired_samples_per_class=params.trim_num)
+    data_cleaning.df_information(df_=df_balanced)
+
+    df_balanced_resized = data_cleaning.resize_images_in_df(df_=df_balanced, save_folder=data_cleaning.train_dir, width=params.image_width, height=params.image_height)
+    #data_cleaning.showcase_df(df_=df_balanced_resized)
+    df_valid_resized = data_cleaning.resize_images_in_df(df_=valid_df, save_folder=data_cleaning.valid_dir)
 
 
-    def save_dfs(self, train_df, valid_df, test_df):
-        processed_data_path = "data/processed"
-        valid_df.to_csv(os.path.join(processed_data_path, "validation_data.csv"), index=False) 
-        test_df.to_csv(os.path.join(processed_data_path, "test_data.csv"), index=False) 
-        train_df.to_csv(os.path.join(processed_data_path, "train_data.csv"), index=False) 
+if __name__ == "__main__":
+    main()
 
-    def execute(self):
-        data = self.create_df()
-        distinct_labels_df = data.drop_duplicates(subset="label")
-        print(distinct_labels_df.head(18))
-
-        self.df_information(df_=data)
-        train_df, valid_df, test_df = self.split_df_to_train_and_test(df_=data)
-
-        trimmed_train_df = self.df_trim(df_= train_df, desired_samples_per_class=200)
-        self.df_information(df_= trimmed_train_df)
-
-        df_balanced = self.df_balance(df_=trimmed_train_df, desired_samples_per_class=200)
-        self.df_information(df_=df_balanced)
-
-        df_balanced_resized = self.resize_images_in_df(df_=df_balanced)
-        #data_cleaning.showcase_df(df_=df_balanced_resized)
-
-        self.save_dfs(train_df=df_balanced_resized, valid_df=valid_df, test_df=test_df)
