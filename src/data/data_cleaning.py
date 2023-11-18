@@ -14,12 +14,14 @@ class CleanData():
         data_dir,
         train_dir,
         valid_dir,
+        test_dir,
         external_dir
     ) -> None:
         super(CleanData, self).__init__()
         self.data_dir = data_dir
         self.train_dir = train_dir
         self.valid_dir = valid_dir
+        self.test_dir = test_dir
         self.external_dir = external_dir
 
     def rename_folder(self, target_folder, old_folder_name, new_folder_name):
@@ -29,19 +31,26 @@ class CleanData():
                 new_dir_path = os.path.join(target_folder, new_folder_name)
                 os.rename(old_dir_path, new_dir_path)
 
-    def create_train_valid_folders(self, labels):
+    def create_train_valid_test_folders(self, var_list):
         os.makedirs(self.train_dir, exist_ok=True)
         os.makedirs(self.valid_dir, exist_ok=True)
+        os.makedirs(self.test_dir, exist_ok=True)
 
-        for label in (labels):
-            new_train_path = os.path.join(self.train_dir, label)
+        for var in (var_list):
+            new_train_path = os.path.join(self.train_dir, var)
             os.makedirs(new_train_path, exist_ok=True)
-            new_valid_path = os.path.join(self.valid_dir, label)
+            print(f"Creat new folder : {new_train_path}")
+
+            new_valid_path = os.path.join(self.valid_dir, var)
             os.makedirs(new_valid_path, exist_ok=True)
+            print(f"Creat new folder : {new_valid_path}")
+
+            new_test_path = os.path.join(self.test_dir, var)
+            os.makedirs(new_test_path, exist_ok=True)
+            print(f"Creat new folder : {new_test_path}")
+
 
     def create_df(self):
-        current_directory = os.getcwd()
-        print("Current Directory:", current_directory)
         self.rename_folder(target_folder=self.external_dir, old_folder_name= 'Processed Images_Fruits', new_folder_name='fruit_images')
 
         fruit_images_dir = os.path.join(self.external_dir, "fruit_images")
@@ -52,6 +61,8 @@ class CleanData():
         bad_quality_path = self.data_dir + "/bad_quality_fruits"
         good_quality_path = self.data_dir + "/good_quality_fruits"
         mixed_quality_path = self.data_dir + "/mixed_quality_fruits"
+
+        self.rename_folder(target_folder=mixed_quality_path, old_folder_name='Lemon', new_folder_name='Lime')
 
         file_paths=[]
         labels=[]
@@ -143,9 +154,9 @@ class CleanData():
 
             return file_path
 
-    def df_balance(self, df_: pd.DataFrame, desired_samples_per_class : int) -> pd.DataFrame:
+    def df_balance(self, df_: pd.DataFrame, desired_samples_per_class : int, flag:bool) -> pd.DataFrame:
         save_folder = self.train_dir
-        # Iterate through the classes with fewer than 200 samples
+        # Iterate through the classes with fewer than desired_samples_per_class samples
         target_class = self.classes_with_less_than_n_samples(df_=df_, desired_samples_per_class=200)
         for class_name in target_class:
                 class_samples = df_[df_["label"]==class_name].value_counts()
@@ -160,7 +171,12 @@ class CleanData():
                     random_image = class_df.iloc[random_index]["image"]
 
                     # Apply data augmentation to generate a new image
-                    save_folder = os.path.join(self.train_dir, class_name)
+                    if flag == True: #quality
+                        var = class_name.split("_")[1]
+                    else: #fruit
+                        var = class_name.split("_")[0]
+
+                    save_folder = os.path.join(self.train_dir, var)
                     augmented_image = self.augment_image(image_path=random_image, save_folder=save_folder)
 
                     # Append the augmented image to your dataset
@@ -175,13 +191,18 @@ class CleanData():
             resized_image = image.resize((new_width, new_height))
             resized_image.save(output_path)
 
-    def resize_images_in_df(self, df_:pd.DataFrame, save_folder, width, height):
+    def resize_images_in_df(self, df_:pd.DataFrame, save_folder, width, height, flag):
 
         for index, row in df_.iterrows():
             image_path = row["image"]
             label = row["label"]
+            if flag == True: #quality
+                var = label.split("_")[1]
+            else: #fruit
+                var = label.split("_")[0]
+
             image_name = os.path.basename(image_path)
-            save_label_folder = os.path.join(save_folder, label)
+            save_label_folder = os.path.join(save_folder, var)
             new_image_path = os.path.join(save_label_folder, image_name)
             if os.path.exists(image_path):
                 self.resize_image(image_path=image_path, output_path=new_image_path, new_width=width, new_height=height)
@@ -196,13 +217,16 @@ def main(cfg):
     # Load the directories and the parameters from hydra #
     dirs = cfg.dirs
     params = cfg.data_cleaning
-    data_cleaning = CleanData(dirs.data_dir, dirs.train_dir, dirs.valid_dir, dirs.external_dir)
+    data_cleaning = CleanData(dirs.data_dir, dirs.train_dir, dirs.valid_dir, dirs.test_dir, dirs.external_dir)
     data = data_cleaning.create_df()
 
-    distinct_labels_df = data.drop_duplicates(subset="label")
-    print(distinct_labels_df.head(18))
-    labels = distinct_labels_df['label'].values
-    data_cleaning.create_train_valid_folders(labels)
+    fruits = ['Apple', 'Banana', 'Lime', 'Guava', 'Orange', 'Pomegranate']
+    qualities = ['Bad', 'Mixed', 'Good']
+    if params.quality_or_fruit == True:
+        var_list = qualities
+    else:
+        var_list = fruits
+    data_cleaning.create_train_valid_test_folders(var_list)
 
     data_cleaning.df_information(df_=data)
     train_df, valid_df, test_df = data_cleaning.split_df_to_train_and_test(df_=data, test_valid_size=params.test_valid_size, test_valid_split=params.test_valid_split)
@@ -210,13 +234,12 @@ def main(cfg):
     trimmed_train_df = data_cleaning.df_trim(df_= train_df, desired_samples_per_class=params.trim_num)
     data_cleaning.df_information(df_= trimmed_train_df)
 
-    df_balanced = data_cleaning.df_balance(df_=trimmed_train_df, desired_samples_per_class=params.trim_num)
+    df_balanced = data_cleaning.df_balance(df_=trimmed_train_df, desired_samples_per_class=params.trim_num, flag=params.quality_or_fruit)
     data_cleaning.df_information(df_=df_balanced)
 
-    df_balanced_resized = data_cleaning.resize_images_in_df(df_=df_balanced, save_folder=data_cleaning.train_dir, width=params.image_width, height=params.image_height)
-    #data_cleaning.showcase_df(df_=df_balanced_resized)
-    df_valid_resized = data_cleaning.resize_images_in_df(df_=valid_df, save_folder=data_cleaning.valid_dir, width=params.image_width, height=params.image_height)
-
+    df_balanced_resized = data_cleaning.resize_images_in_df(df_=df_balanced, save_folder=data_cleaning.train_dir, width=params.image_width, height=params.image_height, flag=params.quality_or_fruit)
+    df_valid_resized = data_cleaning.resize_images_in_df(df_=valid_df, save_folder=data_cleaning.valid_dir, width=params.image_width, height=params.image_height, flag=params.quality_or_fruit)
+    df_test_resized = data_cleaning.resize_images_in_df(df_=test_df, save_folder=data_cleaning.test_dir, width=params.image_width, height=params.image_height, flag=params.quality_or_fruit)
 
 if __name__ == "__main__":
     main()

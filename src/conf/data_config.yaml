@@ -4,11 +4,13 @@ data_cleaning:
   test_valid_size : 0.15
   test_valid_split : 0.5
   trim_num : 300
-  image_width: 256
-  image_height: 256
+  image_width: 128
+  image_height: 128
+  quality_or_fruit: False # If its true it creates train, val datasets based on quality (Bad, Good, Mixed) if its false based on Fruits
 
 dirs:
   train_dir: ${hydra:runtime.cwd}/data/processed/train
   valid_dir: ${hydra:runtime.cwd}/data/processed/valid
+  test_dir: ${hydra:runtime.cwd}/data/processed/test
   data_dir: ${hydra:runtime.cwd}/data/external/fruit_images
   external_dir: ${hydra:runtime.cwd}/data/external

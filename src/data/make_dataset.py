@@ -22,6 +22,7 @@ class FruitsDataset(Dataset):
         self.feature_extractor = feature_extractor
 
         self.num_classes = len(self.images.classes)
+        print(f"{self.data_type} FruitsDataset classes : {self.images.classes} ")
 
         self.label2id = {label: i for i, label in enumerate(self.images.classes)}
         self.id2label = {i: label for i, label in enumerate(self.images.classes)}
