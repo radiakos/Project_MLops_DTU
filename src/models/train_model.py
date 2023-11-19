@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-
+from omegaconf import OmegaConf
 import hydra
 import numpy as np
 import torch
@@ -21,10 +21,26 @@ from src.data.data_cleaning import CleanData
 from datasets import load_metric
 from transformers import AutoModelForImageClassification
 
+logger = logging.getLogger(__name__)
+
+
+def log_metrics_to_wb(params):
+    wandb.log({"train_batch_size": params.train_batch_size})
+    wandb.log({"valid_batch_size": params.valid_batch_size})
+    wandb.log({"test_batch_size": params.test_batch_size})
+    wandb.log({"learning_rate": params.lr})
+    wandb.log({"epochs": params.epochs})
+
+    if params.gpu_flag == True:
+        wandb.log({"Device": "cuda"})
+
 
 @hydra.main(config_path="../conf", config_name="models_config.yaml")
 def main(cfg):
-    # 1. Load hyperparameters
+    # 1. Initialize wandb
+    run = wandb.init(project=cfg.wandb.project, config=OmegaConf.to_container(cfg))
+
+    # 2. Load hyperparameters
     dirs = cfg.dirs
     params = cfg.model
 
@@ -39,17 +55,23 @@ def main(cfg):
 
     train_dir = dirs.train_dir
     valid_dir = dirs.valid_dir
-    test_dir  = dirs.test_dir
+    test_dir = dirs.test_dir
 
-    # 2. Initialize wandb
+    log_metrics_to_wb(params)
 
     # 3. Create the FruitsDataset(s) and their DataLoaders
     model_name_or_path = params.model_path
     processor = ViTImageProcessor.from_pretrained(model_name_or_path)
 
-    train_dataset = FruitsDataset(input_filepath=train_dir, feature_extractor=processor, data_type="train")
-    val_dataset = FruitsDataset(input_filepath=valid_dir, feature_extractor=processor, data_type="valid")
-    test_dataset = FruitsDataset(input_filepath=test_dir, feature_extractor=processor, data_type="test")
+    train_dataset = FruitsDataset(
+        input_filepath=train_dir, feature_extractor=processor, data_type="train"
+    )
+    val_dataset = FruitsDataset(
+        input_filepath=valid_dir, feature_extractor=processor, data_type="valid"
+    )
+    test_dataset = FruitsDataset(
+        input_filepath=test_dir, feature_extractor=processor, data_type="test"
+    )
 
     train_loader_options = {
         "shuffle": shuffle_flag,
@@ -78,7 +100,7 @@ def main(cfg):
         num_labels=train_dataset.num_classes,
     )
 
-    optimizer =  torch.optim.SGD(model.parameters(), lr=lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     epochs = params.epochs
 
     num_training_steps = epochs * len(train_dataloader)
@@ -89,16 +111,13 @@ def main(cfg):
         num_training_steps=num_training_steps,
     )
 
-    device = torch.device(
-            "cuda" if (gpu_flag and  torch.cuda.is_available()) else "cpu"
-        )
-    print(f"Using device: {device}")
+    device = torch.device("cuda" if (gpu_flag and torch.cuda.is_available()) else "cpu")
+    logger.info(f"Using device: {device}")
 
     model.to(device)
 
     # 4. Training loop
     for epoch in tqdm(range(epochs), desc="Training"):
-
         running_loss = 0.0
         accuracy = 0.0
         model.train()
@@ -111,7 +130,9 @@ def main(cfg):
             y_pred = model(**batch)
             class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
 
-            accuracy += accuracy_score(batch["labels"].cpu().numpy(), class_pred.detach().cpu().numpy())
+            accuracy += accuracy_score(
+                batch["labels"].cpu().numpy(), class_pred.detach().cpu().numpy()
+            )
 
             loss = y_pred.loss
             loss.backward()
@@ -122,7 +143,10 @@ def main(cfg):
         running_loss /= len(train_dataloader)
         accuracy /= len(train_dataloader)
 
-        print(f"  Training Loss: {running_loss:.4f}, Training Accuracy: {accuracy:.4f}")
+        wandb.log({"Training Loss": running_loss, "Training Accuracy": accuracy})
+        logger.info(
+            f"  Training Loss: {running_loss:.4f}, Training Accuracy: {accuracy:.4f}"
+        )
 
         # 5. Validation loop
         model.eval()
@@ -137,18 +161,24 @@ def main(cfg):
                 y_pred = model(**batch)
                 class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
 
-                accuracy += accuracy_score(batch["labels"].cpu().numpy(), class_pred.detach().cpu().numpy())
+                accuracy += accuracy_score(
+                    batch["labels"].cpu().numpy(), class_pred.detach().cpu().numpy()
+                )
                 loss = y_pred.loss
                 loss = y_pred.loss
                 running_loss += loss.item()
 
             running_loss /= len(valid_dataloader)
             accuracy /= len(valid_dataloader)
-            #print(f"correct: {accuracy} / length {len(valid_dataloader)}")
 
-            print(f"  Validation Loss: {running_loss:.4f}, Validation Accuracy: {accuracy:.4f}")
+            wandb.log(
+                {"Validation Loss": running_loss, "Validation Accuracy": accuracy}
+            )
+            logger.info(
+                f"  Validation Loss: {running_loss:.4f}, Validation Accuracy: {accuracy:.4f}"
+            )
 
-        model.eval()  # Set the model to evaluation mode
+        model.eval()  # Set the model to evaluation model
 
     # 6. Test loop
     test_loss = 0.0
@@ -162,17 +192,20 @@ def main(cfg):
             y_pred = model(**batch)
             class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
 
-            accuracy += accuracy_score(batch["labels"].cpu().numpy(), class_pred.detach().cpu().numpy())
+            accuracy += accuracy_score(
+                batch["labels"].cpu().numpy(), class_pred.detach().cpu().numpy()
+            )
             loss = y_pred.loss
             loss = y_pred.loss
             test_loss += loss.item()
-
 
     # Calculate average loss and accuracy
     test_loss /= len(test_dataloader)
     accuracy /= len(test_dataloader)
 
-    print(f"  Test Loss: {test_loss:.4f}, Accuracy: {accuracy:.4f}")
+    wandb.log({"Test Loss": test_loss, "Accuracy": accuracy})
+    logger.info(f"  Test Loss: {test_loss:.4f}, Accuracy: {accuracy:.4f}")
+
 
 if __name__ == "__main__":
     main()

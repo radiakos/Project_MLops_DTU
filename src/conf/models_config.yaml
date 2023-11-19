@@ -1,4 +1,7 @@
 # models_config.yaml
+wandb:
+  api_key: "a1582d7e00e1d4c88d9f547b9a755237ffa63871"
+  project: "Project_MLOps"
 
 model:
   model_path: "google/vit-base-patch16-224-in21k"
@@ -8,7 +11,7 @@ model:
   num_workers: 4
   shuffle_flag: False
   lr: 0.001 # (0.1 , 0.01 , 0.001 , 0.0001)
-  epochs: 2
+  epochs: 3
   warmup_steps: 0
   gpu_flag: True
 
