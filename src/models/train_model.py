@@ -93,7 +93,7 @@ def main(cfg):
 
     train_dataloader = DataLoader(train_dataset, **train_loader_options)
     valid_dataloader = DataLoader(val_dataset, **valid_loader_options)
-    test_dataloader = DataLoader(val_dataset, **test_loader_options)
+    test_dataloader = DataLoader(test_dataset, **test_loader_options)
 
     model = AutoModelForImageClassification.from_pretrained(
         model_name_or_path,
