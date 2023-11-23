@@ -1,0 +1,14 @@
+# models_config.yaml
+wandb:
+  api_key: "a1582d7e00e1d4c88d9f547b9a755237ffa63871"
+  project: "Project_MLOps"
+
+defaults:
+  experiment: exp1
+
+dirs:
+  train_dir: ${hydra:runtime.cwd}/data/processed/train
+  valid_dir: ${hydra:runtime.cwd}/data/processed/valid
+  test_dir: ${hydra:runtime.cwd}/data/processed/test
+  model_dir: ${hydra:runtime.cwd}/src/models/saved_models/
+  
