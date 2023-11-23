@@ -1,5 +1,5 @@
 FROM python:3.11.4
-
+#change above with cuda to run with gpu
 # Set working directory
 WORKDIR /app
 
@@ -15,6 +15,8 @@ COPY ../requirements.txt requirements.txt
 RUN pip install -r requirements.txt --no-cache-dir
 COPY ../data/ data/
 
+ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
+
 # # or, DVC-adapted (mitsos)
 # RUN cd /app && mkdir -p src/data && mkdir -p data/raw
 # COPY .dvc /app/.dvc
@@ -23,6 +25,5 @@ COPY ../data/ data/
 # RUN dvc pull
 # RUN python src/data/make_dataset.py
 
-ENTRYPOINT [ "python", "-u", "src/models/model_train.py"]
-# ENTRYPOINT [ "python", "-u", "src/models/model_train.py", "--arg1", "value1"]
-# ENTRYPOINT [ "python", "-u", "src/models/test_docker.py"]
+ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
+# ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]

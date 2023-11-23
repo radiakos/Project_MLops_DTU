@@ -24,7 +24,7 @@ class Model:
         self.logger.info(f"Using device: {self.device}")
         self.dirs = cfg.dirs
         self.params = cfg.params
-
+        self.model_path = cfg.model_path
 
     def log_metrics_to_wb(self,train_flag):
         if train_flag:
@@ -71,7 +71,7 @@ class Model:
         self.log_metrics_to_wb(train_flag=True)
 
         # Create the FruitsDataset(s) and their DataLoaders
-        model_name_or_path = self.params.model_path
+        model_name_or_path = self.model_path
         processor = ViTImageProcessor.from_pretrained(model_name_or_path)
 
         if flag=="train":
@@ -113,7 +113,7 @@ class Model:
             return test_dataloader
 
     def train(self):
-        model_name_or_path = self.params.model_path
+        model_name_or_path = self.model_path
         train_dataset,train_dataloader,valid_dataloader=self.split_dataset("train")
 
         model = AutoModelForImageClassification.from_pretrained(

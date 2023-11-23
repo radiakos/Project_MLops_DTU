@@ -4,7 +4,7 @@ wandb:
   project: "Project_MLOps"
 
 defaults:
-  experiment: exp1
+  - params: exp1
 
 dirs:
   train_dir: ${hydra:runtime.cwd}/data/processed/train
@@ -12,3 +12,4 @@ dirs:
   test_dir: ${hydra:runtime.cwd}/data/processed/test
   model_dir: ${hydra:runtime.cwd}/src/models/saved_models/
   
+model_path: "google/vit-base-patch16-224-in21k"

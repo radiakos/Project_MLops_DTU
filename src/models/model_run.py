@@ -1,5 +1,5 @@
 import os
-from model_action import Model
+from model_actions import Model
 from omegaconf import OmegaConf
 import wandb
 import hydra
@@ -10,7 +10,7 @@ import torch
 def main(cfg):
     print("Is cuda available?", torch.cuda.is_available())
     # Initialize wandb
-    run = wandb.init(project=cfg.wandb.project, config=OmegaConf.to_container(cfg))
+    run = wandb.init(project=cfg.wandb.project)
     # Load hyperparameters
     m_class=Model(cfg)
     if cfg.params.train==True:

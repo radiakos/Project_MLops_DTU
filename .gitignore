@@ -58,7 +58,7 @@ target/
 
 # DotEnv configuration
 .env
-.venv
+
 # Database
 *.db
 *.rdb
@@ -88,3 +88,13 @@ target/
 
 # Mypy cache
 .mypy_cache/
+
+
+/data/external
+/data/processed
+/outputs
+/src/models/saved_models
+/src/models/outputs
+/src/models/wandb
+/wandb
+
