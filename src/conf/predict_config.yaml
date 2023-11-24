@@ -1,0 +1,13 @@
+# models_config.yaml
+wandb:
+  api_key: "a1582d7e00e1d4c88d9f547b9a755237ffa63871"
+  project: "Project_MLOps_predict"
+
+params: 
+  image_name : "test_image.jpg" #change this to the name of the image you want to predict on
+
+dirs:
+  image_dir: ${hydra:runtime.cwd}/data/processed/test
+  model_dir: ${hydra:runtime.cwd}/src/models/saved_models/
+  
+model_path: "google/vit-base-patch16-224-in21k"

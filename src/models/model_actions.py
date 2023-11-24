@@ -34,10 +34,7 @@ class Model:
             wandb.log({"epochs": self.params.epochs})
         else:
             wandb.log({"test_batch_size": self.params.test_batch_size})
-        if self.params.gpu_flag == True:
-            wandb.log({"Device": "cuda"})
-        else:
-            wandb.log({"Device": "cpu"})
+        wandb.log({"Device": self.device})
         return
         
     def log_image_to_wb(self, batch, class_pred, train_flag):
@@ -218,7 +215,7 @@ class Model:
     def load_model(self,name=None):
         model_dir = self.dirs.model_dir
         if not os.path.exists(model_dir):
-            raise Exception("No model found in the model_dir")
+            raise Exception("No model found in the model_dir, please train a model first")
         if name is None:
             #find whatever model in the model_dir
             name=os.listdir(model_dir)[0]
@@ -262,4 +259,27 @@ class Model:
         self.logger.info(f"  Test Loss: {test_loss:.4f}, Accuracy: {accuracy:.4f}")
         return
 
+    def load_image(self):
+        # we need to load one specific image from the image_path with name image_name (both defined in predict config)
+        image_path = self.dirs.image_path
+        if not os.path.exists(image_path):
+            raise Exception("No image found in the image_path, please check the image_path")
+        if self.params.image_name is None:
+            #find whatever image in the image_path if name is not specified
+            image_name=os.listdir(image_path)[0]
+            print("load image:",image_name)
+        else:
+            image_name=self.params.image_name
+        image=None
+        image.to(self.device)
+        return image, image_name
 
+    def predict(self,model):
+        model.to(self.device)
+        model.eval()
+        #load image
+        image, image_name = self.load_image()
+        #predict
+        y_pred = model(**image)
+        class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
+        return image_name, class_pred
