@@ -34,10 +34,7 @@ class Model:
             wandb.log({"epochs": self.params.epochs})
         else:
             wandb.log({"test_batch_size": self.params.test_batch_size})
-        if self.params.gpu_flag == True:
-            wandb.log({"Device": "cuda"})
-        else:
-            wandb.log({"Device": "cpu"})
+        wandb.log({"Device": self.device})
         return
         
     def log_image_to_wb(self, batch, class_pred, train_flag):
