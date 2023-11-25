@@ -15,7 +15,7 @@ COPY ../requirements.txt requirements.txt
 RUN pip install -r requirements.txt --no-cache-dir
 COPY ../data/ data/
 
-ENV wandb_api_key=a1582d7e00e1d4c88d9f547b9a755237ffa63871
+ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
 
 # # or, DVC-adapted (mitsos)
 # RUN cd /app && mkdir -p src/data && mkdir -p data/raw
