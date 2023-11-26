@@ -15,6 +15,7 @@ import wandb
 from src.data.make_dataset import FruitsDataset
 import logging
 from PIL import Image
+from torchvision import transforms
 
 class Model:
     def __init__(self, cfg):
@@ -265,45 +266,48 @@ class Model:
 
         if not subdirectories:
             raise Exception(f"No subdirectories found in the specified directory {dir_path}")
-
         # Choose a random subdirectory
         random_subdirectory = random.choice(subdirectories)
-        return random_subdirectory
+        return dir_path+'/'+random_subdirectory+'/'
     
-    def choose_random_image(self, dir_path, sub_dir_path):
+    def choose_random_image(self, dir_path, sub_dir_path=None):
         # this function return a random image inside a folder.
         image_files = [f for f in os.listdir(os.path.join(dir_path, sub_dir_path)) if f.endswith(('.jpg', '.png', '.jpeg'))]
 
         if not image_files:
             raise Exception(f"No image files found in the chosen subdirectory {sub_dir_path}")
-
         # Choose a random image file
         random_image_file = random.choice(image_files)
         return random_image_file
 
     def load_image(self):
         # we need to load one specific image from the test_dir with name image_name (both defined in predict config)
-        test_dir = self.dirs.test_dir
-
-        test_image_folder = self.choose_random_dir(test_dir)
+        image_dir = self.dirs.image_dir
+        print(f"Load image from image_dir: {image_dir} ")
+        test_image_folder = self.choose_random_dir(image_dir)
         
         if not os.path.exists(test_image_folder):
             raise Exception(f"No image found in the test_image_folder, please check the test_image_folder {test_image_folder}")
             
-        if self.params.image_name is None:
+        if self.params.image_name == 'None':
             # find a random image in the test_image_folder if name is not specified
-            image_name=self.choose_random_image(test_dir, test_image_folder)
+            image_name=self.choose_random_image(image_dir, test_image_folder)
         else:
             image_name=self.params.image_name
 
         print(f"Load image with name: {image_name} ")
-        image_path=os.path.join(test_dir, test_image_folder, image_name)
+        image_path=os.path.join(image_dir, test_image_folder, image_name)
 
-        print(f"Load image with path : {image_name} ")
+        print(f"Load image with path : {image_path} ")
         image = Image.open(image_path)
 
-        # image.to(self.device) that doesn't work.
-        return image, image_name
+        if image.mode != "RGB":
+            image = image.convert(mode="RGB")
+        processor = ViTImageProcessor.from_pretrained(self.model_path)
+
+        image_values = processor(images=image, return_tensors="pt").pixel_values
+        image_values=image_values.to(self.device)
+        return image_values, image_name
 
     def predict(self,model):
         model.to(self.device)
@@ -311,7 +315,7 @@ class Model:
         #load image
         image, image_name = self.load_image()
         #predict
-        y_pred = model(**image)
-        class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
+        y_pred = model(pixel_values=image)
+        class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1).item()
         return image_name, class_pred
 
