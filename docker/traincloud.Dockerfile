@@ -17,13 +17,24 @@ COPY data/ data/
 
 ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
 
-# # or, DVC-adapted (mitsos)
-# RUN cd /app && mkdir -p src/data && mkdir -p data/raw
-# COPY .dvc /app/.dvc
-# COPY data.dvc /app/data.dvc
-# RUN dvc config core.no_scm true
+# or, DVC-adapted
+RUN mkdir -p data/external
+COPY .dvc/ .dvc/
+COPY external.dvc /external.dvc
+RUN dvc config core.no_scm true
+RUN dvc pull
+RUN python src/data/make_dataset.py
+RUN python src/data/data_cleaning.py
+
+# RUN dvc init --no-scm
+# RUN dvc remote add -d myremote gs://birds_bucket/
+# RUN dvc remote modify myremote url gs://birds_bucket/
+# RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-374716-d8e76837973a.json'
+
 # RUN dvc pull
-# RUN python src/data/make_dataset.py
 
 ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
+
+
+
