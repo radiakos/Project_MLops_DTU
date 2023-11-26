@@ -20,7 +20,7 @@ ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
 # or, DVC-adapted
 RUN mkdir -p data/external
 COPY .dvc/ .dvc/
-COPY external.dvc /external.dvc
+#COPY /external.dvc /external.dvc
 RUN dvc config core.no_scm true
 RUN dvc pull
 RUN python src/data/make_dataset.py
