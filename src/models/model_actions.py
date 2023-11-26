@@ -1,5 +1,6 @@
-
 import os
+
+import random
 from pathlib import Path
 from omegaconf import OmegaConf
 import hydra
@@ -13,8 +14,7 @@ from omegaconf import OmegaConf
 import wandb
 from src.data.make_dataset import FruitsDataset
 import logging
-
-
+from PIL import Image
 
 class Model:
     def __init__(self, cfg):
@@ -259,19 +259,50 @@ class Model:
         self.logger.info(f"  Test Loss: {test_loss:.4f}, Accuracy: {accuracy:.4f}")
         return
 
+    def choose_random_dir(self, dir_path):
+        # this function returns a random subdirectory of a directory given the directory path -> used to select an image folder inside the Test dir (either fruit folder or quality folder) 
+        subdirectories = [d for d in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, d))]
+
+        if not subdirectories:
+            raise Exception(f"No subdirectories found in the specified directory {dir_path}")
+
+        # Choose a random subdirectory
+        random_subdirectory = random.choice(subdirectories)
+        return random_subdirectory
+    
+    def choose_random_image(self, dir_path, sub_dir_path):
+        # this function return a random image inside a folder.
+        image_files = [f for f in os.listdir(os.path.join(dir_path, sub_dir_path)) if f.endswith(('.jpg', '.png', '.jpeg'))]
+
+        if not image_files:
+            raise Exception(f"No image files found in the chosen subdirectory {sub_dir_path}")
+
+        # Choose a random image file
+        random_image_file = random.choice(image_files)
+        return random_image_file
+
     def load_image(self):
-        # we need to load one specific image from the image_path with name image_name (both defined in predict config)
-        image_path = self.dirs.image_path
-        if not os.path.exists(image_path):
-            raise Exception("No image found in the image_path, please check the image_path")
+        # we need to load one specific image from the test_dir with name image_name (both defined in predict config)
+        test_dir = self.dirs.test_dir
+
+        test_image_folder = self.choose_random_dir(test_dir)
+        
+        if not os.path.exists(test_image_folder):
+            raise Exception(f"No image found in the test_image_folder, please check the test_image_folder {test_image_folder}")
+            
         if self.params.image_name is None:
-            #find whatever image in the image_path if name is not specified
-            image_name=os.listdir(image_path)[0]
-            print("load image:",image_name)
+            # find a random image in the test_image_folder if name is not specified
+            image_name=self.choose_random_image(test_dir, test_image_folder)
         else:
             image_name=self.params.image_name
-        image=None
-        image.to(self.device)
+
+        print(f"Load image with name: {image_name} ")
+        image_path=os.path.join(test_dir, test_image_folder, image_name)
+
+        print(f"Load image with path : {image_name} ")
+        image = Image.open(image_path)
+
+        # image.to(self.device) that doesn't work.
         return image, image_name
 
     def predict(self,model):
@@ -283,3 +314,4 @@ class Model:
         y_pred = model(**image)
         class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1)
         return image_name, class_pred
+
