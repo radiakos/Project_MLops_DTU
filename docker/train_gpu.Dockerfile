@@ -33,7 +33,7 @@ RUN mkdir -p data/external
 #RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-406109-ac8fa5c6b516.json'
 
 COPY .dvc/ .dvc/
-COPY external.dvc external.dvc
+COPY data/external.dvc data/external.dvc
 RUN dvc config core.no_scm true
 
 RUN dvc pull
