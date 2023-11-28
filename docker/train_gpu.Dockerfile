@@ -35,7 +35,11 @@ RUN mkdir -p data/external
 COPY .dvc/ .dvc/
 COPY data/external.dvc data/external.dvc
 RUN dvc config core.no_scm true
+<<<<<<< HEAD
 RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-3703b69ca83d.json"
+=======
+RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-3703b69ca83d.json'"
+>>>>>>> 5f2e688e045d5a5d7a025818f66f90a939703eb7
 
 RUN dvc pull
 
