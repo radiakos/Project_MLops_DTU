@@ -2,7 +2,7 @@ workerPoolSpecs:
     machineSpec:
         machineType: n1-standard-16
         acceleratorType: NVIDIA_TESLA_T4
-        acceleratorCount: 2
+        acceleratorCount: 1
     replicaCount: 1
     containerSpec:
         imageUri: gcr.io/dtumlops-406109/train@sha256:a0d5ca9cf04d06b253081f271765d6d875a380e0293f5c4eef581665bcfcf5d8
