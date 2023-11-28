@@ -34,7 +34,8 @@ RUN mkdir -p data/external
 
 COPY .dvc/ .dvc/
 COPY data/external.dvc data/external.dvc
-RUN dvc init --no-scm
+RUN dvc config core.no_scm true
+RUN dvc remote modify --local gcs credentialpath "dtumlops-406109-ac8fa5c6b516.json"
 
 RUN dvc pull
 
