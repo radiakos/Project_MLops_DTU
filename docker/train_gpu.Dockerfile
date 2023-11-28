@@ -21,7 +21,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN pip install -U dvc 
 RUN pip install -U dvc[gs]
 
-WORKDIR /
 ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
 
 # or, DVC-adapted
@@ -39,11 +38,9 @@ RUN dvc config core.no_scm true
 
 RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-ac8fa5c6b516.json"
 
-
-
-
 RUN dvc pull
 
+WORKDIR /
 # RUN python src/data/data_cleaning.py
 # RUN python src/data/make_dataset.py
 
