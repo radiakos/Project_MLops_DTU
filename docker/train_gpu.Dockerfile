@@ -11,6 +11,7 @@ COPY requirements_gpu.txt requirements.txt
 COPY setup.py setup.py
 COPY src/ src/
 COPY data/ data/
+COPY dtumlops-406109-3703b69ca83d.json dtumlops-406109-3703b69ca83d.json
 COPY dtumlops-406109-ac8fa5c6b516.json dtumlops-406109-ac8fa5c6b516.json
 # RUN python setup.py
 
@@ -36,11 +37,15 @@ COPY data/external.dvc data/external.dvc
 
 RUN dvc config core.no_scm true
 
-RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-ac8fa5c6b516.json"
+RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-3703b69ca83d.json"
+RUN dvc remote modify --local remote_storage project "dtumlops-406109"
+RUN dvc remote modify --local remote_storage gcp_service_account dtumlops-406109-3703b69ca83d.json
+RUN dvc remote modify --local remote_storage url gs://dtu_mlops_special/
+
+WORKDIR /
 
 RUN dvc pull
 
-WORKDIR /
 # RUN python src/data/data_cleaning.py
 # RUN python src/data/make_dataset.py
 
