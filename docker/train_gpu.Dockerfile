@@ -7,11 +7,13 @@ RUN apt update && \
     apt install --no-install-recommends -y build-essential gcc && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
-COPY data/ data/
-COPY src/ src/
-COPY setup.py setup.py
-# RUN python setup.py
 COPY requirements_gpu.txt requirements.txt
+COPY setup.py setup.py
+COPY src/ src/
+COPY data/ data/
+
+# RUN python setup.py
+
 
 RUN pip install --upgrade pip
 WORKDIR /
