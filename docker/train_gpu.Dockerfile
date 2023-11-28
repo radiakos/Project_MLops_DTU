@@ -13,7 +13,7 @@ COPY setup.py setup.py
 # RUN python setup.py
 COPY requirements_gpu.txt requirements.txt
 
-WORKDIR /
+WORKDIR /workspace/
 #check cuda version
 
 RUN pip install --upgrade pip
