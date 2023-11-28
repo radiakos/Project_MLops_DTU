@@ -27,7 +27,8 @@ class CleanData:
             if folder_name == old_folder_name:
                 old_dir_path = os.path.join(target_folder, folder_name)
                 new_dir_path = os.path.join(target_folder, new_folder_name)
-                os.rename(old_dir_path, new_dir_path)
+                if not os.path.exists(new_dir_path):
+                    os.rename(old_dir_path, new_dir_path)
 
     def create_train_valid_test_folders(self, var_list):
         os.makedirs(self.train_dir, exist_ok=True)
