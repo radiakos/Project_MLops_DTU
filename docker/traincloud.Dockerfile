@@ -18,20 +18,22 @@ COPY data/ data/
 ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
 
 # or, DVC-adapted
-RUN mkdir -p data/external
-COPY .dvc/ .dvc/
-#COPY /external.dvc /external.dvc
-RUN dvc config core.no_scm true
+COPY dtumlops-406109-3703b69ca83d.json dtumlops-406109-3703b69ca83d.json
+#RUN mkdir -p data/external
+#COPY .dvc/ .dvc/
+#COPY external.dvc external.dvc
+#RUN dvc config core.no_scm true
+
+
+RUN dvc init --no-scm
+RUN dvc remote add -d remote_storage gs://dtu_mlops_special/
+RUN dvc remote modify remote_storage url gs://dtu_mlops_special/
+RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-406109-3703b69ca83d.json'
+
 RUN dvc pull
+
 RUN python src/data/make_dataset.py
 RUN python src/data/data_cleaning.py
-
-# RUN dvc init --no-scm
-# RUN dvc remote add -d myremote gs://birds_bucket/
-# RUN dvc remote modify myremote url gs://birds_bucket/
-# RUN export GOOGLE_APPLICATION_CREDENTIALS='dtumlops-374716-d8e76837973a.json'
-
-# RUN dvc pull
 
 ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
