@@ -34,7 +34,7 @@ RUN mkdir -p data/external
 
 COPY .dvc/ .dvc/
 COPY data/external.dvc data/external.dvc
-RUN dvc config core.no_scm true
+RUN dvc init --no-scm
 
 RUN dvc pull
 
