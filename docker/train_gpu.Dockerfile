@@ -11,13 +11,13 @@ COPY data/ data/
 COPY src/ src/
 COPY setup.py setup.py
 # RUN python setup.py
-COPY requirements_gpu.txt requirements_gpu.txt
+COPY requirements_gpu.txt requirements.txt
 
 WORKDIR /
 #check cuda version
 
 RUN pip install --upgrade pip
-RUN pip install -r requirements_gpu.txt --no-cache-dir
+RUN pip install -r requirements.txt --no-cache-dir
 
 ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
 
