@@ -11,7 +11,7 @@ COPY requirements_gpu.txt requirements.txt
 COPY setup.py setup.py
 COPY src/ src/
 COPY data/ data/
-COPY dtumlops-406109-3703b69ca83d.json dtumlops-406109-3703b69ca83d.json
+COPY dtumlops-406109-ac8fa5c6b516.json dtumlops-406109-ac8fa5c6b516.json
 # RUN python setup.py
 
 
@@ -37,7 +37,7 @@ COPY data/external.dvc data/external.dvc
 
 RUN dvc config core.no_scm true
 
-RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-3703b69ca83d.json"
+RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-ac8fa5c6b516.json"
 
 
 
