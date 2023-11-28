@@ -4,5 +4,5 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', "gcr.io/dtumlops-406109/train_gpu" ]
 
-timeout: 5000s
+timeout: 1800s
 
