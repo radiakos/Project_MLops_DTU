@@ -1,0 +1,7 @@
+workerPoolSpecs:
+    machineSpec:
+        machineType: e2-highcpu-16
+    replicaCount: 1
+    containerSpec:
+        imageUri: gcr.io/dtumlops-406109/train@sha256:a0d5ca9cf04d06b253081f271765d6d875a380e0293f5c4eef581665bcfcf5d8
+# if you want the latest image, use this instead: imageUri: gcr.io/dtumlops-406109/train@sha256:latent

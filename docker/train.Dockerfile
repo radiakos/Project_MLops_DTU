@@ -1,4 +1,4 @@
-FROM python:3.11.4
+FROM  nvcr.io/nvidia/pytorch:22.12-py3
 #change above with cuda to run with gpu
 # Set working directory
 WORKDIR /app

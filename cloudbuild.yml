@@ -1,0 +1,7 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-f', 'docker/traincloud.Dockerfile', '-t', 'gcr.io/dtumlops-406109/train', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', "gcr.io/dtumlops-406109/train" ]
+
+

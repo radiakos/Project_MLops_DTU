@@ -4,7 +4,7 @@ wandb:
   project: "Project_MLOps_predict"
 
 params: 
-  image_name : "test_image.jpg" #change this to the name of the image you want to predict on
+  image_name : None #change this to the name of the image you want to predict on
 
 dirs:
   image_dir: ${hydra:runtime.cwd}/data/processed/test
