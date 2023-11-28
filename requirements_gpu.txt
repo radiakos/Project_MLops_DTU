@@ -15,11 +15,7 @@ setuptools==58.1.0
 torch
 torchvision
 tqdm==4.66.1
-transformers==4.34.1
-dvc==3.29.0
-dvc-gdrive
-dvc[gdrive] 
-dvc[gs]
+transformers==4.34.1 
 filelock==3.13.1
 wandb==0.15.12
 pre-commit==3.5.0

@@ -18,6 +18,8 @@ COPY data/ data/
 RUN pip install --upgrade pip
 
 RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install -U dvc 
+RUN pip install -U dvc[gs]
 
 WORKDIR /
 ENV WANDB_API_KEY=a1582d7e00e1d4c88d9f547b9a755237ffa63871
