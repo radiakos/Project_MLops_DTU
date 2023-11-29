@@ -35,8 +35,9 @@ RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-ac8
 RUN dvc pull
 
 RUN python src/data/data_cleaning.py
+RUN python src/models/model_run.py
 
 
-ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
+ENTRYPOINT [ "python", "-u", "src/models/model_predict.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
 #docker build -f docker/train_gpu.Dockerfile . -t train_local:test0
