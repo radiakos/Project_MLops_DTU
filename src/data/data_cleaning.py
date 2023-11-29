@@ -9,6 +9,7 @@ import random
 import hydra
 import wandb
 import logging
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class CleanData:
                 old_dir_path = os.path.join(target_folder, folder_name)
                 new_dir_path = os.path.join(target_folder, new_folder_name)
                 if not os.path.exists(new_dir_path):
-                    os.rename(old_dir_path, new_dir_path)
+                    shutil.move(old_dir_path, new_dir_path)
 
     def create_train_valid_test_folders(self, var_list):
         os.makedirs(self.train_dir, exist_ok=True)

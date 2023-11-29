@@ -47,9 +47,9 @@ RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-ac8
 
 RUN dvc pull
 
-
-RUN python src/data/data_cleaning.py
 RUN python src/data/make_dataset.py
+RUN python src/data/data_cleaning.py
+
 
 ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
