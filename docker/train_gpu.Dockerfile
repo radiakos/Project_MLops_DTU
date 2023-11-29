@@ -37,6 +37,6 @@ RUN dvc pull
 RUN python src/data/data_cleaning.py
 
 
-ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
+ENTRYPOINT [ "python", "-u", "/src/models/model_run.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
 #docker build -f docker/train_gpu.Dockerfile . -t train_local:test0
