@@ -53,3 +53,4 @@ RUN python src/data/make_dataset.py
 
 ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
+#docker build -f docker/train_gpu.Dockerfile . -t train_local:test0
