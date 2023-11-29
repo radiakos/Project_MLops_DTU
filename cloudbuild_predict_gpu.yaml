@@ -1,0 +1,7 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-f', 'docker/predict_gpu.Dockerfile', '-t', 'gcr.io/dtumlops-406109/predict_gpu', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', "gcr.io/dtumlops-406109/predict_gpu" ]
+
+timeout: 5000s
