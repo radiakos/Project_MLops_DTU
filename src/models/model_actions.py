@@ -35,7 +35,7 @@ class Model:
             wandb.log({"epochs": self.params.epochs})
         else:
             wandb.log({"test_batch_size": self.params.test_batch_size})
-        wandb.log({"Device": self.device})
+        #wandb.log({"Device": self.device})
         return
         
     def log_image_to_wb(self, batch, class_pred, train_flag):
