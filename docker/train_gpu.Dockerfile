@@ -38,16 +38,16 @@ COPY data/external.dvc data/external.dvc
 RUN dvc config core.no_scm true
 
 RUN dvc remote modify --local remote_storage credentialpath "dtumlops-406109-ac8fa5c6b516.json"
-RUN dvc remote modify --local remote_storage project "dtumlops-406109"
-RUN dvc remote modify --local remote_storage gcp_service_account dtumlops-406109-ac8fa5c6b516.json
-RUN dvc remote modify --local remote_storage url gs://dtu_mlops_special/
+#RUN dvc remote modify --local remote_storage project "dtumlops-406109"
+#RUN dvc remote modify --local remote_storage gcp_service_account dtumlops-406109-ac8fa5c6b516.json
+#RUN dvc remote modify --local remote_storage url gs://dtu_mlops_special/
 
 WORKDIR /
 
 RUN dvc pull
 
-# RUN python src/data/data_cleaning.py
-# RUN python src/data/make_dataset.py
+RUN python src/data/data_cleaning.py
+RUN python src/data/make_dataset.py
 
 ENTRYPOINT [ "python", "-u", "src/models/model_run.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
