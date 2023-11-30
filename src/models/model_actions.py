@@ -1,4 +1,5 @@
 import os
+import glob
 
 import random
 from pathlib import Path
@@ -18,11 +19,13 @@ from PIL import Image
 from torchvision import transforms
 from google.cloud import storage
 
-def upload_model_gcs(bucket_name:str, credentials_file:str, source_file_path:str, destination_blob_name:str):
-    """ bucket_name: name of bucket on Google Cloud Services
-    credentials_file: json file with credentials for Google Cloud Services
-    source_file_path: txt file that contains the data to upload in the bucket
-    destination_blob_name: txt str with the desired name of the file (source_file_path) in the bucket
+def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
+    """Uploads a directory to a given Google Cloud Service bucket.
+    Args:
+        dir_path (str): Path to the directory to be uploaded.
+        bucket_name (str): Name of the bucket to upload to.
+        credentials_file (str): Name of the json file with the credentials.
+        blob_name (str): folder name to be used for uploading.
     """
     # Initialize the Google Cloud Storage client with the credentials
     storage_client = storage.Client.from_service_account_json(credentials_file)
@@ -31,10 +34,13 @@ def upload_model_gcs(bucket_name:str, credentials_file:str, source_file_path:str
     bucket = storage_client.bucket(bucket_name)
 
     # Upload the file to the bucket
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_path)
-
-    print(f"File {source_file_path} uploaded to gs://{bucket_name}/{destination_blob_name}")
+    rel_paths = glob.glob(dir_path + "/**", recursive=True)
+    for local_file in rel_paths:
+        remote_path = f'{blob_name}/{"/".join(local_file.split(os.sep)[1:])}'
+        if os.path.isfile(local_file):
+            blob = bucket.blob(remote_path)
+            blob.upload_from_filename(local_file)
+        print(f"File {local_file} uploaded to {remote_path}.")
 
 class Model:
     def __init__(self, cfg):
@@ -232,10 +238,9 @@ class Model:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         model.save_pretrained(model_dir+name)
-        json_name = name+'.json'
+        json_name = "config.json"
         print(json_name)
-        upload_model_gcs(self.gcs.bucket_name, self.gcs.credentials_file,
-                         os.path.join(model_dir, json_name), "json_name.txt")       
+        upload_model_gcs(os.path.join(model_dir, name), self.gcs.bucket_name, self.gcs.blob_name, self.gcs.credentials_file)       
         return
     
     def load_model(self,name=None):

@@ -16,4 +16,5 @@ model_path: "google/vit-base-patch16-224-in21k"
 
 gcs:
   bucket_name: "dtu_mlops_special"
+  blob_name: "saved_models"
   credentials_file: "${hydra:runtime.cwd}/dtumlops-406109-ac8fa5c6b516.json"
