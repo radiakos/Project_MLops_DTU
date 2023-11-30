@@ -35,12 +35,21 @@ def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_f
 
     # Upload the file to the bucket
     rel_paths = glob.glob(dir_path + "/**", recursive=True)
-    for local_file in rel_paths:
-        remote_path = f'{blob_name}/{"/".join(local_file.split(os.sep)[1:])}'
-        if os.path.isfile(local_file):
+    # for local_file in rel_paths:
+    #     remote_path = f'{blob_name}/{"/".join(local_file.split(os.sep)[1:])}'
+    #     if os.path.isfile(local_file):
+    #         blob = bucket.blob(remote_path)
+    #         blob.upload_from_filename(local_file)
+    #     print(f"File {local_file} uploaded to {remote_path}.")
+    for root, _, files in os.walk(dir_path):
+        for local_file in files:
+            local_file_path = os.path.join(root, local_file)
+            relative_path = os.path.relpath(local_file_path, dir_path)
+            remote_path = f"{blob_name}/{relative_path}"
+
             blob = bucket.blob(remote_path)
-            blob.upload_from_filename(local_file)
-        print(f"File {local_file} uploaded to {remote_path}.")
+            blob.upload_from_filename(local_file_path)
+            print(f"File {local_file_path} uploaded to {remote_path}.")
 
 class Model:
     def __init__(self, cfg):
