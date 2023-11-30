@@ -22,7 +22,7 @@ from google.cloud import storage
 def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
     """Uploads a directory to a given Google Cloud Service bucket.
     Args:
-        dir_path (str): Path to the directory to be uploaded.
+        dir_path (str): Path of the directory to be uploaded.
         bucket_name (str): Name of the bucket to upload to.
         credentials_file (str): Name of the json file with the credentials.
         blob_name (str): folder name to be used for uploading.
@@ -238,8 +238,6 @@ class Model:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         model.save_pretrained(model_dir+name)
-        json_name = "config.json"
-        print(json_name)
         # upload_model_gcs(os.path.join(model_dir, name), self.gcs.bucket_name, self.gcs.blob_name, self.gcs.credentials_file)
         upload_model_gcs(self.gcs.saved_dir, self.gcs.bucket_name, self.gcs.blob_name, self.gcs.credentials_file)       
         return
