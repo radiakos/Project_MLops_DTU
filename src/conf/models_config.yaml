@@ -13,3 +13,7 @@ dirs:
   model_dir: ${hydra:runtime.cwd}/src/models/saved_models/
   
 model_path: "google/vit-base-patch16-224-in21k"
+
+gcs:
+  bucket_name: "dtu_mlops_special"
+  credentials_file: "${hydra:runtime.cwd}/dtumlops-406109-ac8fa5c6b516.json"

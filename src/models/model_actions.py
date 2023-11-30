@@ -16,6 +16,20 @@ from src.data.make_dataset import FruitsDataset
 import logging
 from PIL import Image
 from torchvision import transforms
+from google.cloud import storage
+
+def upload_model_gcs(bucket_name, credentials_file, source_file_path, destination_blob_name):
+    # Initialize the Google Cloud Storage client with the credentials
+    storage_client = storage.Client.from_service_account_json(credentials_file)
+
+    # Get the target bucket
+    bucket = storage_client.bucket(bucket_name)
+
+    # Upload the file to the bucket
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(source_file_path)
+
+    print(f"File {source_file_path} uploaded to gs://{bucket_name}/{destination_blob_name}")
 
 class Model:
     def __init__(self, cfg):
@@ -26,6 +40,7 @@ class Model:
         self.dirs = cfg.dirs
         self.params = cfg.params
         self.model_path = cfg.model_path
+        self.gcs = cfg.gcs
 
     def log_metrics_to_wb(self,train_flag):
         if train_flag:
@@ -205,12 +220,14 @@ class Model:
             self.save_model(model,name)
         return model, name
     
+
     def save_model(self,model,name):
         model_dir = self.dirs.model_dir
         #find if there is such folder in the model_dir
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         model.save_pretrained(model_dir+name)
+        upload_model_gcs(self.gcs.bucket_name, self.gcs.credentials_file, model_dir+name, name)
         return
     
     def load_model(self,name=None):
@@ -218,7 +235,7 @@ class Model:
         if not os.path.exists(model_dir):
             raise Exception("No model found in the model_dir, please train a model first")
         if name is None:
-            #find whatever model in the model_dir
+            #find first model in the model_dir
             name=os.listdir(model_dir)[0]
             print("load model:",name)
         model = AutoModelForImageClassification.from_pretrained(model_dir+name)
