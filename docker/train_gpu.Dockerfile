@@ -12,7 +12,6 @@ WORKDIR /
 COPY requirements_gpu.txt /requirements.txt
 COPY setup.py /setup.py
 COPY src/ /src/
-RUN docker cp gcr.io/dtumlops-406109/train_gpu@sha256:607158a41f8025fc01a57f506eedbd53e594d1ee94495ed7440ed4a6fa623b9a:src/models/saved_models /src/models/saved_models
 COPY data/ /data/
 COPY dtumlops-406109-3703b69ca83d.json /dtumlops-406109-3703b69ca83d.json
 COPY dtumlops-406109-ac8fa5c6b516.json /dtumlops-406109-ac8fa5c6b516.json
