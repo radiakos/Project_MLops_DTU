@@ -272,7 +272,11 @@ class Model:
     
     def choose_random_image(self, dir_path, sub_dir_path=None):
         # this function return a random image inside a folder.
-        image_files = [f for f in os.listdir(os.path.join(dir_path, sub_dir_path)) if f.endswith(('.jpg', '.png', '.jpeg'))]
+        if sub_dir_path == "" or sub_dir_path == None:
+            # if no subdirectory is specified, choose a random subdirectory
+            image_files = [f for f in os.listdir(dir_path) if f.endswith(('.jpg', '.png', '.jpeg', '.JPG', '.PNG', '.JPEG'))]
+        else:
+            image_files = [f for f in os.listdir(os.path.join(dir_path, sub_dir_path)) if f.endswith(('.jpg', '.png', '.jpeg', '.JPG', '.PNG', '.JPEG'))]
 
         if not image_files:
             raise Exception(f"No image files found in the chosen subdirectory {sub_dir_path}")
@@ -283,22 +287,24 @@ class Model:
     def load_image(self):
         # we need to load one specific image from the test_dir with name image_name (both defined in predict config)
         image_dir = self.dirs.image_dir
-        print(f"Load image from image_dir: {image_dir} ")
-        test_image_folder = self.choose_random_dir(image_dir)
-        
-        if not os.path.exists(test_image_folder):
-            raise Exception(f"No image found in the test_image_folder, please check the test_image_folder {test_image_folder}")
-            
+        if image_dir == "/data/processed/test":
+            test_image_folder = self.choose_random_dir(image_dir)
+            if not os.path.exists(test_image_folder):
+                raise Exception(f"No image found in the test_image_folder, please check the test_image_folder {test_image_folder}")
+        else:
+            #create empty path
+            test_image_folder = ""
         if self.params.image_name == 'None':
             # find a random image in the test_image_folder if name is not specified
             image_name=self.choose_random_image(image_dir, test_image_folder)
+            image_path=os.path.join(image_dir, test_image_folder, image_name)
         else:
             image_name=self.params.image_name
+            image_path=os.path.join(image_dir,image_name)
 
-        print(f"Load image with name: {image_name} ")
-        image_path=os.path.join(image_dir, test_image_folder, image_name)
-
-        print(f"Load image with path : {image_path} ")
+        print(f"Load image in the path : {image_path} ")
+        if not os.path.exists(image_path):
+            raise Exception(f"The image name is not correct, please check if the image exists inside the path {image_dir}")
         image = Image.open(image_path)
 
         if image.mode != "RGB":
