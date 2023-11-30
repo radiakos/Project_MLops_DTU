@@ -306,21 +306,25 @@ class Model:
         if not os.path.exists(image_path):
             raise Exception(f"The image name is not correct, please check if the image exists inside the path {image_dir}")
         image = Image.open(image_path)
+        return image, image_name
 
+    def predict(self,model,fastapi_image=None):
+        model.to(self.device)
+        model.eval()
+        #load image
+        if fastapi_image is None:
+            image, image_name = self.load_image()
+        else:
+            image=fastapi_image
+            image_name="fastapi_image"
+        
+        #predict
         if image.mode != "RGB":
             image = image.convert(mode="RGB")
         processor = ViTImageProcessor.from_pretrained(self.model_path)
 
         image_values = processor(images=image, return_tensors="pt").pixel_values
         image_values=image_values.to(self.device)
-        return image_values, image_name
-
-    def predict(self,model):
-        model.to(self.device)
-        model.eval()
-        #load image
-        image, image_name = self.load_image()
-        #predict
         y_pred = model(pixel_values=image)
         class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1).item()
         return image_name, class_pred
