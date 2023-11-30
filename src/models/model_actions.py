@@ -18,7 +18,12 @@ from PIL import Image
 from torchvision import transforms
 from google.cloud import storage
 
-def upload_model_gcs(bucket_name, credentials_file, source_file_path, destination_blob_name):
+def upload_model_gcs(bucket_name:str, credentials_file:str, source_file_path:str, destination_blob_name:str):
+    """ bucket_name: name of bucket on Google Cloud Services
+    credentials_file: json file with credentials for Google Cloud Services
+    source_file_path: txt file that contains the data to upload in the bucket
+    destination_blob_name: txt str with the desired name of the file (source_file_path) in the bucket
+    """
     # Initialize the Google Cloud Storage client with the credentials
     storage_client = storage.Client.from_service_account_json(credentials_file)
 
@@ -227,7 +232,10 @@ class Model:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         model.save_pretrained(model_dir+name)
-        upload_model_gcs(self.gcs.bucket_name, self.gcs.credentials_file, model_dir+name, name)
+        json_name = name+'.json'
+        print(json_name)
+        upload_model_gcs(self.gcs.bucket_name, self.gcs.credentials_file,
+                         os.join(model_dir, json_name), "json_name.txt")       
         return
     
     def load_model(self,name=None):
