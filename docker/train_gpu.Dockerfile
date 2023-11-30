@@ -1,4 +1,4 @@
-FROM  nvcr.io/nvidia/pytorch:23.02-py3
+FROM  nvcr.io/nvidia/pytorch:23.04-py3
 #change above with cuda to run with gpu
 # Set working directory
 
