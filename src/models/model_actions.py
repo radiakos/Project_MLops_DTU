@@ -235,7 +235,7 @@ class Model:
         json_name = name+'.json'
         print(json_name)
         upload_model_gcs(self.gcs.bucket_name, self.gcs.credentials_file,
-                         os.join(model_dir, json_name), "json_name.txt")       
+                         os.path.join(model_dir, json_name), "json_name.txt")       
         return
     
     def load_model(self,name=None):
