@@ -247,8 +247,7 @@ class Model:
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         model.save_pretrained(model_dir+name)
-        blob_name = os.path.join(self.gcs.blob_name, name)
-        upload_model_gcs(os.path.join(model_dir, name), self.gcs.bucket_name, blob_name, self.gcs.credentials_file)
+        upload_model_gcs(os.path.join(model_dir, name), self.gcs.bucket_name, name, self.gcs.credentials_file)
         # upload_model_gcs(self.gcs.saved_dir, self.gcs.bucket_name, self.gcs.blob_name, self.gcs.credentials_file)       
         return
     
