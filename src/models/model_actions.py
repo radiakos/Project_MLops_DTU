@@ -19,6 +19,7 @@ from PIL import Image
 from torchvision import transforms
 from google.cloud import storage
 
+
 def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
     """Uploads a directory to a given Google Cloud Service bucket.
     Args:
@@ -50,6 +51,7 @@ def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_f
             blob = bucket.blob(remote_path)
             blob.upload_from_filename(local_file_path)
             print(f"File {local_file_path} uploaded to {remote_path}.")
+
 
 def download_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
     """Downloads a directory from a given Google Cloud Service bucket.
@@ -90,7 +92,10 @@ class Model:
         self.model_path = cfg.model_path
         self.gcs = cfg.gcs
 
-    def log_metrics_to_wb(self,train_flag):
+    def log_metrics_to_wb(self,train_flag:bool):
+        """Log metrics to wandb
+        Args:
+            train_flag (bool): True if we are in the training phase, False otherwise."""
         if train_flag:
             wandb.log({"train_batch_size": self.params.train_batch_size})
             wandb.log({"valid_batch_size": self.params.valid_batch_size})
@@ -100,8 +105,18 @@ class Model:
             wandb.log({"test_batch_size": self.params.test_batch_size})
         #wandb.log({"Device": self.device})
         return
+
+    def log_image_to_wb(self, batch, class_pred, train_flag:bool):
+        #batch is a dict
+        #class_pred is a tensor
+        """
+        Log images to wandb
         
-    def log_image_to_wb(self, batch, class_pred, train_flag):
+        Args:
+            batch (dict): batch of images and labels
+            class_pred (tensor): tensor of predictions
+            train_flag (bool): True if we are in the training phase, False otherwise.
+            """
         if train_flag:
             table_name = "validation example"
         else:
@@ -117,6 +132,14 @@ class Model:
         return
     
     def log_histograms(self,class_pred,batch_labels):
+        #class_pred and batch_labels are tensors
+        """Log histograms to wandb
+        
+        Args:
+            class_pred (tensor): tensor of predictions
+            batch_labels (tensor): tensor of labels of the batch
+            
+            """
         batch_labels=batch_labels.cpu().numpy()
         class_pred=class_pred.cpu().numpy()
         for i in range(len(np.unique(batch_labels))):
@@ -128,13 +151,22 @@ class Model:
         return
 
     def split_dataset(self,flag):
+        #flag is either "train" or "test"
+        """Split the dataset into train, valid and test sets.
         
+        Args:
+        
+            flag (str): "train" if we are in the training phase, "test" otherwise.
+            """
+        
+        #log metrics to wandb
         self.log_metrics_to_wb(train_flag=True)
 
         # Create the FruitsDataset(s) and their DataLoaders
         model_name_or_path = self.model_path
         processor = ViTImageProcessor.from_pretrained(model_name_or_path)
 
+        #train and valid
         if flag=="train":
             train_dir = self.dirs.train_dir
             valid_dir = self.dirs.valid_dir
@@ -159,7 +191,7 @@ class Model:
             valid_dataloader = DataLoader(val_dataset, **valid_loader_options)
             return train_dataset,train_dataloader,valid_dataloader
 
-
+        #test
         if flag=="test":
             test_dir = self.dirs.test_dir
             test_dataset = FruitsDataset(
@@ -174,9 +206,18 @@ class Model:
             return test_dataloader
 
     def train(self):
+        """Train the model.
+        
+        Returns:
+
+            model (AutoModelForImageClassification): pretrained model to use
+            
+            """
+        # 1. Create the FruitsDataset(s) and their DataLoaders
         model_name_or_path = self.model_path
         train_dataset,train_dataloader,valid_dataloader=self.split_dataset("train")
-
+        
+        # 2. Create the model, optimizer and scheduler
         model = AutoModelForImageClassification.from_pretrained(
             model_name_or_path,
             num_labels=train_dataset.num_classes,
@@ -184,7 +225,7 @@ class Model:
 
         optimizer = torch.optim.SGD(model.parameters(), lr=self.params.lr)
         epochs = self.params.epochs
-
+        # 3. Create the learning rate scheduler
         num_training_steps = epochs * len(train_dataloader)
         lr_scheduler = get_scheduler(
             name="linear",
@@ -192,7 +233,7 @@ class Model:
             num_warmup_steps=self.params.warmup_steps,
             num_training_steps=num_training_steps,
         )
-
+       
         self.logger.info(f"Using device: {self.device}")
 
         model.to(self.device)
@@ -227,7 +268,7 @@ class Model:
             running_loss /= len(train_dataloader)
             accuracy /= len(train_dataloader)
 
-
+            
             wandb.log({"Training Loss": running_loss, "Training Accuracy": accuracy})
             self.logger.info(
                 f"  Training Loss: {running_loss:.4f}, Training Accuracy: {accuracy:.4f}"
@@ -237,7 +278,7 @@ class Model:
             model.eval()
             running_loss = 0.0
             accuracy = 0.0
-
+            
             with torch.no_grad():
                 for batch in tqdm(valid_dataloader, desc="Validation", leave=False):
                     batch["pixel_values"] = torch.squeeze(batch["pixel_values"], 1)
@@ -270,6 +311,9 @@ class Model:
     
 
     def save_model(self,model,name):
+        """Save model to the model_dir.       
+            """
+        #save model to the model_dir
         model_dir = self.dirs.model_dir
         #find if there is such folder in the model_dir
         if not os.path.exists(model_dir):
@@ -280,6 +324,7 @@ class Model:
         return
     
     def load_model(self,name=None):
+        #load model from the model_dir
         model_dir = self.dirs.model_dir
         download_model_gcs(model_dir, self.gcs.bucket_name, "", self.gcs.credentials_file)
         if not os.path.exists(model_dir) or len(os.listdir(model_dir))==1:
@@ -298,6 +343,12 @@ class Model:
         return model,name
 
     def test(self,model):
+        """Test the model.
+
+        Args:
+            model (AutoModelForImageClassification): pretrained model to use
+
+            """ 
         model.to(self.device)
         model.eval()  # Set the model to evaluation model
 
@@ -334,6 +385,7 @@ class Model:
         return
 
     def choose_random_dir(self, dir_path):
+        """Choose a random subdirectory of a directory given the directory path."""
         # this function returns a random subdirectory of a directory given the directory path -> used to select an image folder inside the Test dir (either fruit folder or quality folder) 
         subdirectories = [d for d in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, d))]
 
@@ -344,6 +396,7 @@ class Model:
         return dir_path+'/'+random_subdirectory+'/'
     
     def choose_random_image(self, dir_path, sub_dir_path=None):
+        """Choose a random image inside a folder given the folder path."""
         # this function return a random image inside a folder.
         if sub_dir_path == "":
             # if no subdirectory is specified, choose a random subdirectory
@@ -358,6 +411,10 @@ class Model:
         return random_image_file
 
     def load_image(self):
+        """Load an image from the test_dir.            
+                Returns:    
+                    image (PIL image): image to predict
+                    image_name (str): name of the image to predict"""
         # we need to load one specific image from the test_dir with name image_name (both defined in predict config)
         image_dir = self.dirs.image_dir
         if "data/processed/test" in image_dir:
@@ -383,12 +440,14 @@ class Model:
         return image, image_name
 
     def predict(self,model,fastapi_image=None):
+        """Predict class of an image."""
         model.to(self.device)
         model.eval()
         #load image
         if fastapi_image is None:
             image, image_name = self.load_image()
         else:
+            #this is used for fastapi
             image=fastapi_image
             image_name="fastapi_image"
         
@@ -396,7 +455,7 @@ class Model:
         if image.mode != "RGB":
             image = image.convert(mode="RGB")
         processor = ViTImageProcessor.from_pretrained(self.model_path)
-
+        
         image_values = processor(images=image, return_tensors="pt").pixel_values
         image_values=image_values.to(self.device)
         y_pred = model(pixel_values=image_values)
