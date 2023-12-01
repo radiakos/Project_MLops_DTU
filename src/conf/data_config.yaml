@@ -6,7 +6,7 @@ data_cleaning:
   trim_num : 300
   image_width: 128
   image_height: 128
-  quality_or_fruit: False # If its true it creates train, val datasets based on quality (Bad, Good, Mixed) if its false based on Fruits
+  based_on_quality: False # If its true it creates train, val datasets based on quality (Bad, Good, Mixed) if its false based on Fruits
 
 dirs:
   train_dir: ${hydra:runtime.cwd}/data/processed/train

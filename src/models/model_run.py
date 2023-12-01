@@ -8,10 +8,16 @@ import torch
 # Load config file
 @hydra.main(config_path="../conf", config_name="models_config.yaml",version_base=None)
 def main(cfg):
+    """Main function to run the model
+    Args:
+        cfg: Config file, with directory paths, hyperparameters and wandb and GCP settings"""
+    
+    # Check if cuda is available to use gpu, if not, use cpu
     print("Is cuda available?", torch.cuda.is_available())
+
     # Initialize wandb
     run = wandb.init(project=cfg.wandb.project)
-    # Load hyperparameters
+
     m_class=Model(cfg)
     if cfg.params.train==True:
         print("Training and testing")

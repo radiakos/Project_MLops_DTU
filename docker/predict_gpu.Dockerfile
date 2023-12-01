@@ -1,4 +1,4 @@
-FROM  nvcr.io/nvidia/pytorch:23.04-py3
+FROM  nvcr.io/nvidia/pytorch:23.02-py3
 #change above with cuda to run with gpu
 # Set working directory
 
@@ -36,7 +36,6 @@ RUN dvc pull
 
 RUN python src/data/data_cleaning.py
 
-
-ENTRYPOINT [ "python", "-u", "/src/models/model_run.py"]
+ENTRYPOINT [ "python", "-u", "/src/models/model_predict.py"]
 # ENTRYPOINT [ "python", "-u", "src/models/model_run.py", "--arg1", "value1"]
 #docker build -f docker/train_gpu.Dockerfile . -t train_local:test0
