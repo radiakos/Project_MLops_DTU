@@ -1,4 +1,5 @@
 import os
+import glob
 
 import random
 from pathlib import Path
@@ -16,6 +17,67 @@ from src.data.make_dataset import FruitsDataset
 import logging
 from PIL import Image
 from torchvision import transforms
+from google.cloud import storage
+
+def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
+    """Uploads a directory to a given Google Cloud Service bucket.
+    Args:
+        dir_path (str): Path of the directory to be uploaded.
+        bucket_name (str): Name of the bucket to upload to.
+        credentials_file (str): Name of the json file with the credentials.
+        blob_name (str): folder name to be used for uploading.
+    """
+    # Initialize the Google Cloud Storage client with the credentials
+    storage_client = storage.Client.from_service_account_json(credentials_file)
+
+    # Get the target bucket
+    bucket = storage_client.bucket(bucket_name)
+
+    # Upload the file to the bucket
+    rel_paths = glob.glob(dir_path + "/**", recursive=True)
+    # for local_file in rel_paths:
+    #     remote_path = f'{blob_name}/{"/".join(local_file.split(os.sep)[1:])}'
+    #     if os.path.isfile(local_file):
+    #         blob = bucket.blob(remote_path)
+    #         blob.upload_from_filename(local_file)
+    #     print(f"File {local_file} uploaded to {remote_path}.")
+    for root, _, files in os.walk(dir_path):
+        for local_file in files:
+            local_file_path = os.path.join(root, local_file)
+            relative_path = os.path.relpath(local_file_path, dir_path)
+            remote_path = f"{blob_name}/{relative_path}"
+
+            blob = bucket.blob(remote_path)
+            blob.upload_from_filename(local_file_path)
+            print(f"File {local_file_path} uploaded to {remote_path}.")
+
+def download_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
+    """Downloads a directory from a given Google Cloud Service bucket.
+    Args:
+        dir_path (str): Path of the directory to be downloaded to.
+        bucket_name (str): Name of the bucket to download from.
+        credentials_file (str): Name of the json file with the credentials.
+        blob_name (str): folder name to be used for downloading.
+    """
+    # Initialize the Google Cloud Storage client with the credentials
+    storage_client = storage.Client.from_service_account_json(credentials_file)
+
+    # Get the target bucket
+    bucket = storage_client.bucket(bucket_name)
+
+    # Download the file from the bucket
+    blobs = bucket.list_blobs(prefix=blob_name)
+    for blob in blobs:
+        if blob.name[-1] == '/':
+            continue
+        remote_path = blob.name
+        local_file_path = os.path.join(dir_path, remote_path)
+        local_dir_path = os.path.dirname(local_file_path)
+        if not os.path.exists(local_dir_path):
+            os.makedirs(local_dir_path)
+        blob.download_to_filename(local_file_path)
+        print(f"File {remote_path} downloaded to {local_file_path}.")
+    return
 
 class Model:
     def __init__(self, cfg):
@@ -26,6 +88,7 @@ class Model:
         self.dirs = cfg.dirs
         self.params = cfg.params
         self.model_path = cfg.model_path
+        self.gcs = cfg.gcs
 
     def log_metrics_to_wb(self,train_flag):
         if train_flag:
@@ -205,22 +268,32 @@ class Model:
             self.save_model(model,name)
         return model, name
     
+
     def save_model(self,model,name):
         model_dir = self.dirs.model_dir
         #find if there is such folder in the model_dir
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         model.save_pretrained(model_dir+name)
+        upload_model_gcs(os.path.join(model_dir, name), self.gcs.bucket_name, name, self.gcs.credentials_file)
+        # upload_model_gcs(self.gcs.saved_dir, self.gcs.bucket_name, self.gcs.blob_name, self.gcs.credentials_file)       
         return
     
     def load_model(self,name=None):
         model_dir = self.dirs.model_dir
-        if not os.path.exists(model_dir):
-            raise Exception("No model found in the model_dir, please train a model first")
+        download_model_gcs(model_dir, self.gcs.bucket_name, "", self.gcs.credentials_file)
+        if not os.path.exists(model_dir) or len(os.listdir(model_dir))==1:
+            raise Exception("No model found in the model_dir, please correct path and name of the model from the bucket first")
         if name is None:
-            #find whatever model in the model_dir
+            #find first model in the model_dir
             name=os.listdir(model_dir)[0]
-            #print("load model:",name)
+            if name=='.gitkeep':
+                if len(os.listdir(model_dir))==1:
+                    raise Exception("No model found in the model_dir, please correct path and name of the model from the bucket first")
+                name=os.listdir(model_dir)[1]
+            print("load model:",name)
+        if not os.path.exists(model_dir+name):
+            raise Exception("No model found in the model_dir, please correct path and name of the model from the bucket first")
         model = AutoModelForImageClassification.from_pretrained(model_dir+name)
         return model,name
 
@@ -316,7 +389,7 @@ class Model:
         if fastapi_image is None:
             image, image_name = self.load_image()
         else:
-            image= fastapi_image
+            image=fastapi_image
             image_name="fastapi_image"
         
         #predict
@@ -329,4 +402,3 @@ class Model:
         y_pred = model(pixel_values=image_values)
         class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1).item()
         return image_name, class_pred
-
