@@ -17,12 +17,11 @@ def main(cfg):
     print("Predicting the class of the image")
     # Predict the class of the image
     image_name, class_name=m_class.predict(model)
-    print(class_name, image_name)
     #keep only value of class name
     wandb.log({"Test with model": model_name})
     wandb.log({"Image name": image_name})
     wandb.log({"Predicted class": class_name})
-    print("The class of the image ", image_name, "is", class_name)
+    print("The class of the image ", image_name, "is", class_name, "according to the model", model_name)
     return class_name
 
 if __name__ == "__main__":
