@@ -326,7 +326,7 @@ class Model:
     def load_model(self,name=None):
         #load model from the model_dir
         model_dir = self.dirs.model_dir
-        download_model_gcs(model_dir, self.gcs.bucket_name, "", self.gcs.credentials_file)
+        download_model_gcs(model_dir, self.gcs.bucket_name, name, self.gcs.credentials_file)
         if not os.path.exists(model_dir) or len(os.listdir(model_dir))==1:
             raise Exception("No model found in the model_dir, please correct path and name of the model from the bucket first")
         if name is None:

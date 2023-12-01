@@ -96,4 +96,5 @@ target/
 /src/models/outputs
 /src/models/wandb
 /wandb
+/models
 

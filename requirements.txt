@@ -23,3 +23,6 @@ dvc[gs]
 filelock==3.13.1
 wandb==0.15.12
 pre-commit==3.5.0
+opencv-python
+fastapi
+uvicorn[standard]
