@@ -18,7 +18,9 @@ def main(cfg):
     # Initialize wandb
     run = wandb.init(project=cfg.wandb.project)
 
+
     # Load model
+
     m_class=Model(cfg)
     if cfg.params.train==True:
         print("Training and testing")
