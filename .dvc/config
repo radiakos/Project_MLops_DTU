@@ -2,3 +2,5 @@
     remote = remote_storage
 ['remote "remote_storage"']
     url = gs://dtu_mlops_special/
+['remote "remote_saved_models"']
+    url = gs://dtu_mlops_saved_models/
