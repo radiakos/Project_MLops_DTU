@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class FruitsDataset(Dataset):
-    def __init__(
-        self,
-        input_filepath: str,
-        data_type: str,
-        feature_extractor: AutoFeatureExtractor,
+    """Define fruits dataset class.
+    Methods:
+        __init__ : Initialize FruitsDataset class
+        __getitem__ : Get item from dataset
+        __len__ : Get length of dataset"""
+    
+    def __init__(self,input_filepath: str,data_type: str,feature_extractor: AutoFeatureExtractor,
     ) -> None:
         super(FruitsDataset, self).__init__()
         self.input_filepath = input_filepath
