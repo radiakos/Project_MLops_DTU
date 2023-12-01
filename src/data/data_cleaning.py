@@ -129,7 +129,7 @@ class CleanData:
 
     def split_df_to_train_and_test(
         self, df_: pd.DataFrame, test_valid_size:int, test_valid_split:int
-    ) -> tuple(pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    ):
         """Split the DataFrame into train, validation and test sets.
         Args:
             df_ (pd.DataFrame): The dataframe to be split.
