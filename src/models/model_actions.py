@@ -316,7 +316,7 @@ class Model:
         if fastapi_image is None:
             image, image_name = self.load_image()
         else:
-            image=fastapi_image
+            image= fastapi_image
             image_name="fastapi_image"
         
         #predict
