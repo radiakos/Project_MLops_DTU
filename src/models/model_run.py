@@ -5,7 +5,7 @@ import wandb
 import hydra
 import torch
 
-# Load config file
+# Load config file using hydra
 @hydra.main(config_path="../conf", config_name="models_config.yaml",version_base=None)
 def main(cfg):
     """Main function to run the model
@@ -18,6 +18,9 @@ def main(cfg):
     # Initialize wandb
     run = wandb.init(project=cfg.wandb.project)
 
+
+    # Load model
+
     m_class=Model(cfg)
     if cfg.params.train==True:
         print("Training and testing")
@@ -26,6 +29,7 @@ def main(cfg):
         print("Testing")
         model,model_name=m_class.load_model()
     wandb.log({"Test with model": model_name})
+    # Test the model
     m_class.test(model)
 
 if __name__ == "__main__":

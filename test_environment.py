@@ -1,6 +1,8 @@
 import sys
 
+# Check that we're using the right Python version.
 REQUIRED_PYTHON = "python3"
+
 
 
 def main():

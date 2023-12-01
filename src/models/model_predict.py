@@ -5,7 +5,7 @@ import wandb
 import hydra
 import torch
 
-# Load config file
+# Load config file using hydra
 @hydra.main(config_path="../conf", config_name="predict_config.yaml",version_base=None)
 def main(cfg):
     print("Is cuda available?", torch.cuda.is_available())
