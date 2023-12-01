@@ -5,9 +5,15 @@ wandb:
 
 params: 
   image_name : None #change this to the name of the image you want to predict on
+  model_name : None #change this to the name of the model you want to use for prediction
 
 dirs:
   image_dir: ${hydra:runtime.cwd}/data/processed/test
   model_dir: ${hydra:runtime.cwd}/src/models/saved_models/
   
 model_path: "google/vit-base-patch16-224-in21k"
+
+gcs:
+  bucket_name: "dtu_mlops_saved_models"
+  credentials_file: "${hydra:runtime.cwd}/dtumlops-406109-ac8fa5c6b516.json"
+  saved_dir: ${hydra:runtime.cwd}/models/

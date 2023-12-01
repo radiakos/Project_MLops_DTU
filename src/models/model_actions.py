@@ -51,6 +51,34 @@ def upload_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_f
             blob.upload_from_filename(local_file_path)
             print(f"File {local_file_path} uploaded to {remote_path}.")
 
+def download_model_gcs(dir_path:str, bucket_name:str, blob_name:str, credentials_file:str):
+    """Downloads a directory from a given Google Cloud Service bucket.
+    Args:
+        dir_path (str): Path of the directory to be downloaded to.
+        bucket_name (str): Name of the bucket to download from.
+        credentials_file (str): Name of the json file with the credentials.
+        blob_name (str): folder name to be used for downloading.
+    """
+    # Initialize the Google Cloud Storage client with the credentials
+    storage_client = storage.Client.from_service_account_json(credentials_file)
+
+    # Get the target bucket
+    bucket = storage_client.bucket(bucket_name)
+
+    # Download the file from the bucket
+    blobs = bucket.list_blobs(prefix=blob_name)
+    for blob in blobs:
+        if blob.name[-1] == '/':
+            continue
+        remote_path = blob.name
+        local_file_path = os.path.join(dir_path, remote_path)
+        local_dir_path = os.path.dirname(local_file_path)
+        if not os.path.exists(local_dir_path):
+            os.makedirs(local_dir_path)
+        blob.download_to_filename(local_file_path)
+        print(f"File {remote_path} downloaded to {local_file_path}.")
+    return
+
 class Model:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -253,11 +281,16 @@ class Model:
     
     def load_model(self,name=None):
         model_dir = self.dirs.model_dir
-        if not os.path.exists(model_dir):
-            raise Exception("No model found in the model_dir, please train a model first")
+        download_model_gcs(model_dir, self.gcs.bucket_name, "njdsnjd", self.gcs.credentials_file)
+        if not os.path.exists(model_dir) or len(os.listdir(model_dir))==1:
+            raise Exception("No model found in the model_dir, please correct path and name of the model from the bucket first")
         if name is None:
             #find first model in the model_dir
             name=os.listdir(model_dir)[0]
+            if name=='.gitkeep':
+                if len(os.listdir(model_dir))==1:
+                    raise Exception("No model found in the model_dir, please correct path and name of the model from the bucket first")
+                name=os.listdir(model_dir)[1]
             print("load model:",name)
         model = AutoModelForImageClassification.from_pretrained(model_dir+name)
         return model,name
@@ -310,7 +343,7 @@ class Model:
     
     def choose_random_image(self, dir_path, sub_dir_path=None):
         # this function return a random image inside a folder.
-        if sub_dir_path == "" or sub_dir_path == None:
+        if sub_dir_path == "":
             # if no subdirectory is specified, choose a random subdirectory
             image_files = [f for f in os.listdir(dir_path) if f.endswith(('.jpg', '.png', '.jpeg', '.JPG', '.PNG', '.JPEG'))]
         else:
@@ -325,11 +358,12 @@ class Model:
     def load_image(self):
         # we need to load one specific image from the test_dir with name image_name (both defined in predict config)
         image_dir = self.dirs.image_dir
-        if image_dir == "/data/processed/test":
+        if "data/processed/test" in image_dir:
             test_image_folder = self.choose_random_dir(image_dir)
             if not os.path.exists(test_image_folder):
                 raise Exception(f"No image found in the test_image_folder, please check the test_image_folder {test_image_folder}")
         else:
+            #print(image_dir)
             #create empty path
             test_image_folder = ""
         if self.params.image_name == 'None':
@@ -340,26 +374,29 @@ class Model:
             image_name=self.params.image_name
             image_path=os.path.join(image_dir,image_name)
 
-        print(f"Load image in the path : {image_path} ")
+        #print(f"Load image in the path : {image_path} ")
         if not os.path.exists(image_path):
             raise Exception(f"The image name is not correct, please check if the image exists inside the path {image_dir}")
         image = Image.open(image_path)
+        return image, image_name
 
+    def predict(self,model,fastapi_image=None):
+        model.to(self.device)
+        model.eval()
+        #load image
+        if fastapi_image is None:
+            image, image_name = self.load_image()
+        else:
+            image=fastapi_image
+            image_name="fastapi_image"
+        
+        #predict
         if image.mode != "RGB":
             image = image.convert(mode="RGB")
         processor = ViTImageProcessor.from_pretrained(self.model_path)
 
         image_values = processor(images=image, return_tensors="pt").pixel_values
         image_values=image_values.to(self.device)
-        return image_values, image_name
-
-    def predict(self,model):
-        model.to(self.device)
-        model.eval()
-        #load image
-        image, image_name = self.load_image()
-        #predict
-        y_pred = model(pixel_values=image)
+        y_pred = model(pixel_values=image_values)
         class_pred = torch.argmax(torch.softmax(y_pred.logits, dim=1), dim=1).item()
         return image_name, class_pred
-
