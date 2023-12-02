@@ -17,7 +17,7 @@ class FruitsDataset(Dataset):
         __getitem__ : Get item from dataset
         __len__ : Get length of dataset"""
     
-    def __init__(self,input_filepath: str,data_type: str,feature_extractor: AutoFeatureExtractor,
+    def __init__(self, input_filepath: str,data_type: str,feature_extractor: AutoFeatureExtractor,
     ) -> None:
         super(FruitsDataset, self).__init__()
         self.input_filepath = input_filepath

@@ -78,9 +78,9 @@ class CleanData:
             new_folder_name="mixed_quality_fruits",
         )
 
-        bad_quality_path = self.data_dir + "/bad_quality_fruits"
-        good_quality_path = self.data_dir + "/good_quality_fruits"
-        mixed_quality_path = self.data_dir + "/mixed_quality_fruits"
+        bad_quality_path = fruit_images_dir + "/bad_quality_fruits"
+        good_quality_path = fruit_images_dir + "/good_quality_fruits"
+        mixed_quality_path = fruit_images_dir + "/mixed_quality_fruits"
 
         self.rename_folder(
             target_folder=mixed_quality_path,
@@ -120,9 +120,9 @@ class CleanData:
             df_ (pd.DataFrame): The dataframe with info to be displayed."""
         class_count = len(list(df_["label"].unique()))
         logger.info(f"The dataset contains {df_.shape[0]} images.")
-        logger.info(
-            f"The dataset contains the following {class_count} distinct classes. \n"
-        )
+        #logger.info(
+            #f"The dataset contains the following {class_count} distinct classes. \n"
+        #)
 
         items_per_class = list(df_["label"].value_counts())
         logger.info(f"\nEach of the above classses contains {items_per_class} images.")

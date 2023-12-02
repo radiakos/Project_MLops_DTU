@@ -150,7 +150,7 @@ class Model:
             wandb.log({f"histogramm of class {i}": wandb.Histogram(pred_list)})
         return
 
-    def split_dataset(self,flag):
+    def split_dataset(self, flag):
         #flag is either "train" or "test"
         """Split the dataset into train, valid and test sets.
         
@@ -382,7 +382,7 @@ class Model:
 
         wandb.log({"Test Loss": test_loss, "Accuracy": accuracy})
         self.logger.info(f"  Test Loss: {test_loss:.4f}, Accuracy: {accuracy:.4f}")
-        return
+        return accuracy
 
     def choose_random_dir(self, dir_path):
         """Choose a random subdirectory of a directory given the directory path."""
