@@ -72,9 +72,9 @@ end of the project.
 
 ### Week 2
 
-* [ ] Write unit tests related to the data part of your code
+* [x] Write unit tests related to the data part of your code
 * [ ] Write unit tests related to model construction and or model training
-* [ ] Calculate the coverage.
+* [x] Calculate the coverage.
 * [ ] Get some continuous integration running on the github repository
 * [x] Create a data storage in GCP Bucket for you data and preferable link this with your data version control setup
 * [x] Create a trigger workflow for automatically building your docker images
@@ -223,7 +223,7 @@ end of the project.
 >
 > Answer:
 
---- question 9 fill here ---
+--- We used different braches to test different stuff. Mostly each branch had its own user, so that everybody can work on things simultaneously. That quickly changed and most branches had a purpose behind them (gcloud, docker and config files etc), plus a branch were a running version of the model was kept as a failsafe. In the end we merged two branches that had all the necessary aspects we needed to include in the main branch. (mostly from gcloud branch and config). (We generally use branches so that the main part of the repository is affected while we run tests and change things in them.)---
 
 ### Question 10
 
@@ -238,7 +238,7 @@ end of the project.
 >
 > Answer:
 
----We used DVC for saving data both in google drive and google cloud. It helped us to access and store data, while working with different vms.---
+---We used DVC for saving data both in google drive and google cloud. It helped us to access and store data, while working with different vms. We basically managed to store our data elsewhere other than the repository of course. Even though we used specific data that were not subject to changes (as there were specific images to be used), let's explain the functionallity and benefit of having dvc. Once you are able to push and pull the data and have it in your local machine, you can tag it as version one and then every time you make a change and push again you can in the git repository. The versioning is done when changes are made in the data and you dvc add once again. This updates the .dvc file, maintaining a record of changes. Mostly we used DVC to be able to store data on the cloud (and models) and call the data every time we had to run our model, no matter the machine we were in (VM, local etc). ---
 
 ### Question 11
 
@@ -321,7 +321,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 15 fill here ---
+--- training docker image: `docker run trainer:latest lr=1e-3 batch_size=6`. Link to docker file: <https://console.cloud.google.com/gcr/images/dtumlops-406109/GLOBAL/train_gpu@sha256:607158a41f8025fc01a57f506eedbd53e594d1ee94495ed7440ed4a6fa623b9a/details> ---
 
 ### Question 16
 
@@ -353,7 +353,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 17 fill here ---
+--- We used `Cloud Storage` to store our data and models in buckets (pushed and pulled with DVC). Triggers to be used when pushing from a branch of our git repository and used config files to then automatically (or manually). Container Registry where our docker images from our triggers and from training our model on VertexAI were storred. VertexAI to train our model. Cloud Run where we tried to deploy our model (and functions), but unsuccessfully. (+billing)---
 
 ### Question 18
 
@@ -368,7 +368,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 18 fill here ---
+--- So, we did not create our own virtual machine with its own specifications . We did however use Vertex AI. This basically creates a virtual machine and uses our own specifications and docker image, to train the model for example, and then closes the vm after the process is finished. We used instances with the following hardware:  `machineType`: n1-standard-8 for CPU run in `europe-central2` region succesfully. We tried all the gpus in all the regions within EU, but all outputed the quotas error and failed to run... ---
 
 ### Question 19
 
@@ -377,7 +377,8 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 19 fill here ---
+--- ![GCP Bucket Image](figures/Buckets.png)
+![GCP Data Folders Image](figures/DataFolders.png)---
 
 ### Question 20
 
@@ -386,7 +387,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 20 fill here ---
+--- ![GCP Container Registry](figures/ContainerRegistry.png) ---
 
 ### Question 21
 
@@ -395,7 +396,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 21 fill here ---
+---  ![GCP Cloud Build History Image](figures/Cloudbuild.png) ---
 
 ### Question 22
 
@@ -440,7 +441,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 24 fill here ---
+--- s222556 used 100 credits from the free trial on his personal account---
 
 ## Overall discussion of project
 
@@ -475,7 +476,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 26 fill here ---
+--- For starters the model was an issue. The code had to be changed some times during the whole project to match the ideas we had on how it would work. Next up, DVC. This didn't work at all for us when we used the google drive space to store our data. While if someone dvc pushed the data could usually pull it, the rest could not. This was fixed when we used the bucket from the GCP and created a google group to allow permissions for all our users and stored our credentials in a json to use when creating a docker image on the cloud. The docker image .yaml file was also challenging, as there was no explanations online or many examples that could help us. Through trying over and over we figured it out and made it work. Training the model on a gpu was also impossible in GCP, as it always provided an error of not enough quotas to train our model there and you can't edit the quotas in the free trial. We managed to run on HPC and locally on a coputer with gpu and in GCP using CPU. FastAPI and how to use an image as an input to predict the class of the image, because we wanted to do both that and run a random image from the test files if none was inputted, also we couldn't find a way to use hydra and FastAPI simultaneously. Lastly Cloud Run was not very successful. It kept giving us an error about the port we used (8080), but we tried a few more and it also didn't work and we were mostly out of time at that point. ---
 
 ### Question 27
 
