@@ -163,7 +163,7 @@ end of the project.
 > *experiments.*
 > Answer:
 
---- We have only filled a subset of the cookiecutters folders, namely data, src ... We have not used notebooks or ... We have also added custom folders, such as docker or conf.---
+--- We have also added custom folders, such as docker or conf. Indeed, we have used the cookiecutter template for the format of our project. Our data is located in the data folder (in the external subfolder) since they come for an external source (Kaggle). After being processed and cleaned the data which will be used for training validating and testing the model are relocated in the data/processed folder. We have filled most of the folders, like src (where the source code is located), notebooks (for the initials notebooks that were used to explore the data and the training), test (for unit testing), conf (for our configuration files) and docker for our containers. Ultimately, folder. git contains the workflows, and the folder .dvc contains essential configuration for data version control. ---
 
 ### Question 6
 
@@ -174,7 +174,7 @@ end of the project.
 >
 > Answer:
 
---- question 6 fill here ---
+--- Yes, we have used the Black code style and the cookie cutter format. By installing the cookie cutter on our virtual environment, it automatically creates the folder that you need in a Machine Learning Operations project. Everything is well defined and easy to find. Additionally, we used the black coding style, by adding the specific hook in the pre commit yaml file. Black formats all the files during committing, and it aims for consistency, generality, readability and reducing git diffs.  We also defined the line length to be limited to 88 characters per line. Lastly, we tried to document as many parts of the code as possible in an effort to make it readable, understandable and easier to maintain.  ---
 
 ## Version control
 
@@ -193,7 +193,7 @@ end of the project.
 >
 > Answer:
 
---- question 7 fill here ---
+--- We have implemented 2 tests. One that tests the cleaning of our data and one that tests the creation of the dataset and data loaders that will be used throughout our model training, validation and testing. Data is one of the most important concepts for a machine learning project. Ensuring that the data cleaning and preprocessing steps are correct helps maintain data quality. Furthermore, it makes the overall machine learning pipeline more consistent and reliable.  ---
 
 ### Question 8
 
@@ -208,7 +208,7 @@ end of the project.
 >
 > Answer:
 
---- question 8 fill here ---
+--- The total code coverage is 82% of our code. Even if someone has 100% coverage it does not mean that the code will be error free. Code coverage is a metric that indicates the percentage of the codebase that is exercised by the tests. It is positive to have a high code coverage as close to 100% as possible but it doesn’t guarantee that all possible edge cases have been considered. In addition to having high code coverage, testing practices should include well designed tests that cover a variety of scenarios, continuous testing (in case the data has changed format for example) and lastly manual testing.  ---
 
 ### Question 9
 
@@ -254,7 +254,17 @@ end of the project.
 >
 > Answer:
 
---- question 11 fill here ---
+--- For our continuous integration, our group implemented the following:  
+
+Unit testing: specifically, 2 tests, one for testing the data preprocessing/cleaning and one for testing the make_dataset script. These tests provide 82% coverage. 
+
+Pre commit: one pre commit yaml file, which includes essential hooks (like formatting the code Black style, fixing end of files, trailing whitespace and checking the addition of large files in the project). 
+
+GitHub actions: Every time a group member commits, the code is tested on 3 versions of Python (3.9, 3.10 and 3.11) on the latest Ubuntu and Windows operating systems. 
+
+Triggers for GCP: We built triggers so that new docker images will be created in the cloud every time a push is made in one (any or specified) branch.
+
+Link to our GitHub actions workflow: https://github.com/radiakos/Project_MLops_DTU/blob/main/.github/workflows/tests.yml  ---
 
 ## Running code and tracking experiments
 
@@ -289,7 +299,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
----fill here---
+---We made use of configuration files in order to secure that no information is lost when running different experiments. For our experiments we used a variety of hyperparameters and to make sure that no information is lost, we primarily logged these hyperparameters on wandb, alongside the results of our model training, validation and testing. Additionally, we used the hydra configuration tool, throughout our codebase, to load the hyperparameters from the configuration files and to keep track of the outputs. This way, we can always track the experiments and ensure their reproducibility.--
 
 ### Question 14
 
@@ -306,7 +316,14 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
----Wandb allowed us to save not only the hyperparameters of the models, but also to monitor the progress of ourexperiments. More specifically, we logged the losses of the model in each epoch, the training, validation and test accuracy and the test loss. Additionally, the hyperparameters such as training, validation and test batch size, number of epochs, learning rate and number of the trainers.---
+---Wandb allowed us to save not only the hyperparameters of the models, but also to monitor the progress of ourexperiments. More specifically, we logged the losses of the model in each epoch, the training, validation and test accuracy and the test loss. Additionally, the hyperparameters such as training, validation and test batch size, number of epochs, learning rate and number of the trainers.
+
+
+![GCP Bucket Image](figures/exp_fruits_train_acc.png)
+
+![GCP Bucket Image](figures/exp_fruits_val_loss.png)
+
+![GCP Bucket Image](figures/exp_fruits_val_predict.png)---
 
 ### Question 15
 
@@ -321,7 +338,11 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- training docker image: `docker run trainer:latest lr=1e-3 batch_size=6`. Link to docker file: <https://console.cloud.google.com/gcr/images/dtumlops-406109/GLOBAL/train_gpu@sha256:607158a41f8025fc01a57f506eedbd53e594d1ee94495ed7440ed4a6fa623b9a/details> ---
+--- At first, we used Docker locally. We have created two dockerfiles to build the images for training/testing and predicting, with: (1) a base image that works with GPU (cuda), (2) the corresponding requirements installed, (3) the source and data folders copied, (4) the WandB and GCP/dvc credentials needed, (5) dvc set up and pulling of the data, and (6) the respective py scripts as entrypoints. We have tested these images by running several containers locally (on the computers with available GPU). 
+
+As a next step, we move to the cloud. To build the images, we have used Cloud Build service: we have created two triggers that, by means of two cloudbuild yaml files with a list of steps, build and push the images, which can then be pulled. To run the containers, we train models on Vertex AI training, based on the available successful images on Cloud Build. 
+
+Training docker image: `docker run trainer: lr=1e-3 batch_size=6`. Link to docker file: <https://console.cloud.google.com/gcr/images/dtumlops-406109/GLOBAL/train_gpu@sha256:607158a41f8025fc01a57f506eedbd53e594d1ee94495ed7440ed4a6fa623b9a/details> ---
 
 ### Question 16
 
@@ -336,7 +357,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 16 fill here ---
+--- We mostly used the debbuger mode in VSCode. All of us made use of it and local tests to see how the code performs. ---
 
 ## Working in the cloud
 
@@ -412,7 +433,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 22 fill here ---
+--- We managed to deploy the model locally with Fastapi. Fastapi gives us the ability to upload any image and predict its class, using the specific model from cloud bucket that we selected before launching the application. The deployment with Fastapi required not to use hydra, due to conflict to args parsing. For that reason, we needed to create a different py file, only for our fastapi application. Additionally, having everything set up, models in cloud bucket, bucket for our images (where the user can upload images), the required dockerfile for the prediction, as well as the respective configuration, in which the user can select both the model and the image. However, we didn’t manage to deploy the model in cloud. When doing the cloud run, we got a port error. I.e. that we could not connect to the predefined port (as said before). We tried different ones, but with no success. ---
 
 ### Question 23
 
@@ -427,7 +448,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 23 fill here ---
+--- Unfortunately, we did not implement monitoring for our deployed model. Monitoring plays a crucial role in ensuring the longevity, stability, and optimal performance of an application throughout its lifecycle. Some ways in which monitoring contributes to the longevity of a Machine Learning Operations project are making the project available and reliable, tracking the utilization of resource like CPU, GPU and memory, and monitoring potential data drifting that would degrade the model's accuracy. A future improvement for our project would be to use evidently to monitor potential data drifting that would cause a degrade in our model's accuracy and efficiency. Furthermore, another future improvement would be to set up an alert system for our deployed project, to monitor the metrics that are important for our model.  ---
 
 ### Question 24
 
@@ -462,7 +483,11 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 25 fill here ---
+--- ![GCP Cloud Build History Image](figures/operations.drawio.png) 
+
+Our diagram starts with the cookiecutter, which defines the layout of our github repository, where our remote repository is hosted. The data, which are the raw fruit images, is tracked via dvc and stored in a bucket, Google Cloud Storage. The github repository contains the pytorch code with the different modules for the model, training, prediction and datasets. We used different branches through the development of our code, which later merged with main after one of the members submitted a pull request. We used pep8 to pre-commit each time that a member committed changes to a branch, in order to have nice formatting in our code. Additionally, unit tests were performed, testing our data, using github actions. As for training and prediction, the respective docker images were generated for gpu. Through cloudbuild, we created the triggers that build and push the dockers images. When the build is completed, vertex AI runs the respective containers. The configuration of our code is stored both in hydra config files and in wandb. As for training, the models are stored directly in a bucket Google Cloud Storage for later use. 
+
+Finally, a Fastapi application is built in the folder app, and it runs locally. When the user uploads a fruit image, it downloads the selected, or one of the saved models (when specified) from the bucket (Cloud Storage) and returns the quality class prediction.---
 
 ### Question 26
 
@@ -496,4 +521,4 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 * Student s222556 was in charge of setting up dvc, Google Cloud Platform (Cloud Build, Vertex AI, Cloud Run, Cloud Storage, Cloud Functions), developing FastAPI, and code typing.
 * Student s222559 was in charge of developing and implementing the train and predict models, FastAPI, dockerfiles, debugging, profiling, and wandb.
 * Student s213579 was in charge of dockerfiles, code typing, running GCP services.
-* Student ss223526 was in charge of implementing the data preprocessing, train of the model, wandb.
+* Student ss223526 was in charge of implementing the data preprocessing, train of the model, wandb, pre-commit file and developed tests for unit testing the data preprocessing and make dataset.
