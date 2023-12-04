@@ -262,6 +262,8 @@ Pre commit: one pre commit yaml file, which includes essential hooks (like forma
 
 GitHub actions: Every time a group member commits, the code is tested on 3 versions of Python (3.9, 3.10 and 3.11) on the latest Ubuntu and Windows operating systems. 
 
+Triggers for GCP: We built triggers so that new docker images will be created in the cloud every time a push is made in one (any or specified) branch.
+
 Link to our GitHub actions workflow: https://github.com/radiakos/Project_MLops_DTU/blob/main/.github/workflows/tests.yml  ---
 
 ## Running code and tracking experiments
@@ -314,7 +316,14 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
----Wandb allowed us to save not only the hyperparameters of the models, but also to monitor the progress of ourexperiments. More specifically, we logged the losses of the model in each epoch, the training, validation and test accuracy and the test loss. Additionally, the hyperparameters such as training, validation and test batch size, number of epochs, learning rate and number of the trainers.---
+---Wandb allowed us to save not only the hyperparameters of the models, but also to monitor the progress of ourexperiments. More specifically, we logged the losses of the model in each epoch, the training, validation and test accuracy and the test loss. Additionally, the hyperparameters such as training, validation and test batch size, number of epochs, learning rate and number of the trainers.
+
+
+![GCP Bucket Image](figures/exp_fruits_train_acc.png)
+
+![GCP Bucket Image](figures/exp_fruits_val_loss.png)
+
+![GCP Bucket Image](figures/exp_fruits_val_predict.png)---
 
 ### Question 15
 
@@ -329,7 +338,11 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- training docker image: `docker run trainer:latest lr=1e-3 batch_size=6`. Link to docker file: <https://console.cloud.google.com/gcr/images/dtumlops-406109/GLOBAL/train_gpu@sha256:607158a41f8025fc01a57f506eedbd53e594d1ee94495ed7440ed4a6fa623b9a/details> ---
+--- At first, we used Docker locally. We have created two dockerfiles to build the images for training/testing and predicting, with: (1) a base image that works with GPU (cuda), (2) the corresponding requirements installed, (3) the source and data folders copied, (4) the WandB and GCP/dvc credentials needed, (5) dvc set up and pulling of the data, and (6) the respective py scripts as entrypoints. We have tested these images by running several containers locally (on the computers with available GPU). 
+
+As a next step, we move to the cloud. To build the images, we have used Cloud Build service: we have created two triggers that, by means of two cloudbuild yaml files with a list of steps, build and push the images, which can then be pulled. To run the containers, we train models on Vertex AI training, based on the available successful images on Cloud Build. 
+
+Training docker image: `docker run trainer: lr=1e-3 batch_size=6`. Link to docker file: <https://console.cloud.google.com/gcr/images/dtumlops-406109/GLOBAL/train_gpu@sha256:607158a41f8025fc01a57f506eedbd53e594d1ee94495ed7440ed4a6fa623b9a/details> ---
 
 ### Question 16
 
@@ -420,7 +433,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- question 22 fill here ---
+--- We managed to deploy the model locally with Fastapi. Fastapi gives us the ability to upload any image and predict its class, using the specific model from cloud bucket that we selected before launching the application. The deployment with Fastapi required not to use hydra, due to conflict to args parsing. For that reason, we needed to create a different py file, only for our fastapi application. Additionally, having everything set up, models in cloud bucket, bucket for our images (where the user can upload images), the required dockerfile for the prediction, as well as the respective configuration, in which the user can select both the model and the image. However, we didn’t manage to deploy the model in cloud. When doing the cloud run, we got a port error. I.e. that we could not connect to the predefined port (as said before). We tried different ones, but with no success. ---
 
 ### Question 23
 
@@ -435,7 +448,7 @@ Regarding the training, the training and only, we mounted hydra with exp.yaml fi
 >
 > Answer:
 
---- Unfortunately, we did not implement monitoring for our deployed model. Monitoring plays a crucial role in ensuring the longevity, stability, and optimal performance of an application throughout its lifecycle. Some ways in which monitoring contributes to the longevity of a Machine Learning Operations project are making the project available and reliable, tracking the utilization of resource like CPU, GPU and memory and monitoring potential data drifting that would degrade the model's accuracy. A future improvement for our project would be to use evidently to monitor potential data drifting that would cause a degrade in our model's accuracy and efficiency. Furthermore, another future improvement would be to set up an alert system for our deployed project, to monitor the metrics that are important for our model.  ---
+--- Unfortunately, we did not implement monitoring for our deployed model. Monitoring plays a crucial role in ensuring the longevity, stability, and optimal performance of an application throughout its lifecycle. Some ways in which monitoring contributes to the longevity of a Machine Learning Operations project are making the project available and reliable, tracking the utilization of resource like CPU, GPU and memory, and monitoring potential data drifting that would degrade the model's accuracy. A future improvement for our project would be to use evidently to monitor potential data drifting that would cause a degrade in our model's accuracy and efficiency. Furthermore, another future improvement would be to set up an alert system for our deployed project, to monitor the metrics that are important for our model.  ---
 
 ### Question 24
 
