@@ -483,7 +483,11 @@ Training docker image: `docker run trainer: lr=1e-3 batch_size=6`. Link to docke
 >
 > Answer:
 
---- question 25 fill here ---
+--- ![GCP Cloud Build History Image](figures/operations.drawio.png) 
+
+Our diagram starts with the cookiecutter, which defines the layout of our github repository, where our remote repository is hosted. The data, which are the raw fruit images, is tracked via dvc and stored in a bucket, Google Cloud Storage. The github repository contains the pytorch code with the different modules for the model, training, prediction and datasets. We used different branches through the development of our code, which later merged with main after one of the members submitted a pull request. We used pep8 to pre-commit each time that a member committed changes to a branch, in order to have nice formatting in our code. Additionally, unit tests were performed, testing our data, using github actions. As for training and prediction, the respective docker images were generated for gpu. Through cloudbuild, we created the triggers that build and push the dockers images. When the build is completed, vertex AI runs the respective containers. The configuration of our code is stored both in hydra config files and in wandb. As for training, the models are stored directly in a bucket Google Cloud Storage for later use. 
+
+Finally, a Fastapi application is built in the folder app, and it runs locally. When the user uploads a fruit image, it downloads the selected, or one of the saved models (when specified) from the bucket (Cloud Storage) and returns the quality class prediction.---
 
 ### Question 26
 
